@@ -85,6 +85,7 @@ commands = {
 		table.insert(stack, mem[address] or 0)
 	end,
 	[0x02] = function(address)	--set
+		local stack = stack
 		mem[address] = stack[#stack]
 	end,
 	[0x03] = function(value)	--put
@@ -100,9 +101,11 @@ commands = {
 		clear()
 	end,
 	[0x07] = function()			--getp
+		local stack = stack
 		stack[#stack] = mem[stack[#stack]]
 	end,
 	[0x08] = function(p)		--goto
+		local stack = stack
 		local b = stack[#stack] > 0
 		clear()
 		if b then
@@ -110,6 +113,7 @@ commands = {
 		end
 	end,
 	[0x09] = function()			--gotos
+		local stack = stack
 		local b, p = stack[#stack-1] > 0, stack[#stack]
 		clear()
 		if b then
@@ -117,56 +121,67 @@ commands = {
 		end
 	end,
 	[0x0a] = function()			--add
+		local stack = stack
 		local r = stack[#stack-1] + stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x0b] = function()			--sub
+		local stack = stack
 		local r = stack[#stack-1] - stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x0c] = function()			--mult
+		local stack = stack
 		local r = stack[#stack-1] * stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x0d] = function()			--div
+		local stack = stack
 		local r = math.floor(stack[#stack-1] / stack[#stack])
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x0e] = function()			--pow
+		local stack = stack
 		local r = stack[#stack-1] ^ stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x0f] = function()			--root
+		local stack = stack
 		local r = math.floor(stack[#stack-1] ^ (1/stack[#stack]))
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x10] = function()			--mod
+		local stack = stack
 		local r = stack[#stack-1] % stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r
 	end,
 	[0x11] = function()			--eq
+		local stack = stack
 		local r = stack[#stack-1] == stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r and 1 or 0
 	end,
 	[0x12] = function()			--lt
+		local stack = stack
 		local r = stack[#stack-1] < stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r and 1 or 0
 	end,
 	[0x13] = function()			--gt
+		local stack = stack
 		local r = stack[#stack-1] > stack[#stack]
 		stack[#stack] = nil
 		stack[#stack] = r and 1 or 0
 	end,
 	[0x14] = function()			--not
+		local stack = stack
 		local r = stack[#stack] == 0
 		stack[#stack] = r and 1 or 0
 	end,
@@ -175,6 +190,7 @@ commands = {
 		table.insert(stack, i:seek()/3)
 	end,
 	[0x16] = function(address)			--ascii
+		local stack = stack
 		local s = string.format("%d", stack[#stack])
 		for i = 0, #s-1 do
 			mem[address+i] = s:sub(i+1, i+1) and string.byte(s:sub(i+1, i+1)) or 0
@@ -192,6 +208,7 @@ commands = {
 		table.insert(stack, tonumber(s))
 	end,
 	[0x18] = function()					--setp
+		local stack = stack
 		mem[stack[#stack-1]] = stack[#stack]
 	end,
 }
@@ -208,6 +225,11 @@ i = arg[1] == "-" and io.stdin or io.open(arg[1])
 if not i then
 	print("Could not open file " .. arg[1])
 	return 1
+end
+if #arg > 1 then
+	for i = 2, #arg do
+		table.insert(stack, arg[i])
+	end
 end
 local file = i:read("*a")
 i:close()
