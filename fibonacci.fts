@@ -1,0 +1,55 @@
+#!./run.sh
+
+Fibonacci: prints a fibonacci sequence
+
+$num 0001
+	Number of numbers to output
+$prev 0002
+	Previous number
+$cur 0003
+	Current number
+
+	Start of code
+set $num
+	Preserve the last argument, if given
+get $num
+put 0000
+eq 0000
+	Compare the argument 0 (0 = not given)
+not 0000
+goto :start
+	If argument is given skip setting the default
+put 000a
+set $num
+	Set the default to 10
+
+:start
+put 0000
+set $prev
+call ffff
+put 0001
+set $cur
+call ffff
+	Initialize and print the previous and current values
+get $num
+put 0002
+sub 0000
+set $num
+	Subtract 2, for 0 and 1
+
+:loop
+get $prev
+get $cur
+set $prev
+add 0000
+set $cur
+	We have calculated and stored the fibonnaci number
+call ffff
+	Run it through debug to print it painlessly
+get $num
+put 0001
+sub 0000
+set $num
+	Decrease the number of outputs by 1
+goto :loop
+	If more than 0 times left, loop

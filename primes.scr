@@ -1,0 +1,135 @@
+#!./run.sh
+$max 0001
+$end 0002
+$counter 0003
+$i 0004
+$temp 0005
+set $max
+get $max
+put 0000
+eq 0000
+goto :getmax
+put 0001
+goto :calcend
+
+:getmax
+put 0064
+set $max
+put 0001
+goto :calcend
+
+:calcend
+get $max
+put 0002
+root 0000
+set $end
+put 0001
+goto :createlist
+
+:createlist
+put 0001
+set $i
+goto :listloop
+
+:listloop
+get $i
+put 0001
+add 0000
+set $i
+put 0100
+add 0000
+put 0001
+setp 0000
+get $i
+get $max
+put 0001
+sub 0000
+mod 0000
+goto :listloop
+put 0001
+goto :setuploop
+
+:setuploop
+put 0001
+set $counter
+put 0001
+goto :loop
+
+:loop
+get $counter
+put 0001
+add 0000
+set $counter
+put 0001
+goto :setupstripe
+
+:continueloop
+get $counter
+get $end
+mod 0000
+goto :loop
+put 0001
+goto :printlist
+
+:setupstripe
+put 0002
+set $i
+goto :stripeoff
+
+:stripeoff
+get $counter
+get $i
+mult 0000
+set $temp
+put 0100
+add 0000
+put 0000
+setp 0000
+get $temp
+get $i
+put 0001
+add 0000
+set $i
+get $counter
+mult 0000
+get $max
+div 0000
+not 0000
+goto :stripeoff
+put 0001
+goto :continueloop
+
+:printlist
+put 0001
+set $i
+goto :printloop
+
+:printloop
+get $i
+put 0001
+add 0000
+set $i
+put 0100
+add 0000
+getp 0000
+goto :print
+put 0001
+goto :continueprint
+
+:continueprint
+get $i
+get $max
+put 0001
+sub 0000
+mod 0000
+goto :printloop
+put 0001
+goto :end
+
+:print
+get $i
+call ffff
+put 0001
+goto :continueprint
+
+:end
