@@ -31,8 +31,8 @@ if not arg then
 	print("Must be called from the command line")
 	return 1
 end
-if #arg < 2 then
-	print("Usage: " .. arg[0] .. " <infile> <outfile>")
+if #arg < 1 then
+	print("Usage: " .. arg[0] .. " <infile> [outfile]")
 	return 1
 end
 local i = arg[1] == "-" and io.stdin or io.open(arg[1])
@@ -40,6 +40,7 @@ if not i then
 	print("Could not open file " .. arg[1])
 	return 1
 end
+if not arg[2] then arg[2] = "a.ftsb" end
 local o = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 if not o then
 	print("Could not open file " .. arg[2])

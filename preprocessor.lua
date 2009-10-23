@@ -14,7 +14,7 @@ if not arg then
 	return 1
 end
 if #arg < 1 then
-	print("Usage: " .. arg[0] .. " <infile>")
+	print("Usage: " .. arg[0] .. " <infile> [outfile]")
 	return 1
 end
 local i = arg[1] == "-" and io.stdin or io.open(arg[1])
@@ -22,6 +22,8 @@ if not i then
 	print("Could not open file " .. arg[i])
 	return 1
 end
+if not arg[2] then arg[2] = "a.ftsp" end
+local o = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 local content = i:read("*a")
 content = content:gsub("\"(.-)\"", parsestrings)
 if content:sub(1, 2) == "#!" then
@@ -61,5 +63,6 @@ end
 for i, v in ipairs(labelinserts) do
 	labelinserts[i] = string.format("%04x", labels[v] or 0)
 end
-print(output:format(unpack(labelinserts)))
+o:write(output:format(unpack(labelinserts)))
+o:close()
 i:close()
