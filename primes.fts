@@ -47,20 +47,20 @@ sub 0000
 mod 0000
 goto :listloop
 put 0001
-goto :setuploop
 
 :setuploop
 put 0001
 set $counter
 put 0001
-goto :loop
 
 :loop
 get $counter
 put 0001
 add 0000
 set $counter
-put 0001
+put 0100
+add 0000
+getp 0000
 goto :setupstripe
 
 :continueloop
@@ -74,7 +74,6 @@ goto :printlist
 :setupstripe
 put 0002
 set $i
-goto :stripeoff
 
 :stripeoff
 get $counter
@@ -96,7 +95,6 @@ goto :continueloop
 :printlist
 put 0001
 set $i
-goto :printloop
 
 :printloop
 get $i
@@ -107,8 +105,6 @@ put 0100
 add 0000
 getp 0000
 goto :print
-put 0001
-goto :continueprint
 
 :continueprint
 get $i
