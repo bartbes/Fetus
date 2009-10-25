@@ -19,6 +19,22 @@ do
 	setmetatable(mem, mt)
 end
 
+function readfd(fd, arg)
+	if io.type(fd) then
+		return fd:read(arg)
+	else
+		return fd:receive(arg)
+	end
+end
+
+function writefd(fd, text)
+	if io.type(fd) then
+		return fd:write(text)
+	else
+		return fd:send(text)
+	end
+end
+
 funcs = {
 	[0x0001] = function()		--output
 		for i, v in ipairs(stack) do
@@ -53,8 +69,9 @@ funcs = {
 			mode = "a"
 		end
 		local f = io.open(fname, mode)
-		table.insert(handles, f)
-		table.insert(stack, #handles)
+		local id = #handles+1
+		table.insert(handles, id, f)
+		table.insert(stack, id)
 	end,
 	[0x0004] = function()		--fileclose
 		local id = stack[1]
@@ -65,7 +82,7 @@ funcs = {
 	[0x0005] = function()		--read
 		local id, pos, size = stack[1], stack[2], stack[3]
 		clear()
-		local text = handles[id]:read(size-1)
+		local text = readfd(handles[id], size-1)
 		for i = 0, size-1 do
 			mem[pos+i] = text:sub(i+1, i+1) and string.byte(text:sub(i+1, i+1)) or 0
 		end
@@ -79,8 +96,22 @@ funcs = {
 			if v == 0 then break end
 			text = text .. string.char(v)
 		end
-		handles[id]:write(text)
+		writefd(handles[id], text)
 		clear()
+	end,
+	[0x0007] = function()		--tcp
+		local ip = ""
+		for i, v in ipairs(stack) do
+			if v == 0 then break end
+			ip = ip .. string.char(v)
+		end
+		local port = stack[#ip+2]
+		clear()
+		local sock = socket.tcp()
+		local id = #handles+1
+		table.insert(handles, id, sock)
+		assert(sock:connect(ip, port))
+		table.insert(stack, id)
 	end,
 	[0xFFFF] = function()		--debug
 		print(stack[#stack])
