@@ -113,6 +113,39 @@ funcs = {
 		assert(sock:connect(ip, port))
 		table.insert(stack, id)
 	end,
+	[0x0008] = function()		--udp
+		clear()
+		local sock = socket.udp()
+		local id = #handles+1
+		table.insert(handles, id, sock)
+		table.insert(stack, id)
+	end,
+	[0x0009] = function()		--createip
+		local addr, a, b, c, d = stack[1], stack[2], stack[3], stack[4], stack[5]
+		clear()
+		local s = string.format("%d.%d.%d.%d", a, b, c, d)
+		for i = 0, #s-1 do
+			mem[addr+i] = s:sub(i+1, i+1)
+		end
+		table.insert(stack, #s)
+	end,
+	[0x000a] = function()		--sendto
+		local id = stack[1]
+		table.remove(stack, 1)
+		local text = ""
+		while stack[1] ~= 0 do
+			text = text .. string.char(table.remove(stack, 1))
+		end
+		table.remove(stack, 1)
+		local ip = ""
+		while stack[1] ~= 0 do
+			ip = ip .. string.char(table.remove(stack, 1))
+		end
+		table.remove(stack, 1)
+		local port = stack[1]
+		clear()
+		handles[id]:sendto(text, ip, port)
+	end,
 	[0xFFFF] = function()		--debug
 		print(stack[#stack])
 	end,

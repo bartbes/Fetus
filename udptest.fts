@@ -1,0 +1,33 @@
+#!./fetus
+
+$sock 0001
+	Declare $sock
+
+call 0008
+	Create an UDP socket
+set $sock
+	Save it
+clear 0000
+	Clear the stack (unnecessary)
+get $sock
+	Get the socket again
+"Pie!"
+	Write some text
+pop 0000
+	Pop the last character (which is 0)
+put 000a
+	Put a newline character in (\n = 0ah)
+put 0000
+	End the string with a 0 character
+"127.0.0.1"
+	The target
+put 270f
+	The port (9999)
+call 000a
+	Sendto
+clear 0000
+	Clear the stack again
+get $sock
+	Get the socket
+call 0004
+	Close it
