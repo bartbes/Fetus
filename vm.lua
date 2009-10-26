@@ -5,6 +5,7 @@ require("socket")
 stack = {}
 mem = {}
 handles = {}
+address = {"0.0.0.0", 0}
 
 function clear()
 	while #stack ~= 0 do
@@ -145,6 +146,27 @@ funcs = {
 		local port = stack[1]
 		clear()
 		handles[id]:sendto(text, ip, port)
+	end,
+	[0x000b] = function()		--storeaddress
+		local ip = ""
+		while stack[1] ~= 0 do
+			ip = ip .. string.char(table.remove(stack, 1))
+		end
+		table.remove(stack, 1)
+		local port = stack[1]
+		clear()
+		address = {ip, port}
+	end,
+	[0x000c] = function()		--getaddress
+		clear()
+		local ip = address[1]
+		local iplen = #ip
+		local port = address[2]
+		for i = 1, iplen do
+			table.insert(stack, string.byte(ip:sub(1, 1)))
+		end
+		table.insert(stack, 0)
+		table.insert(stack, port)
 	end,
 	[0xFFFF] = function()		--debug
 		print(stack[#stack])
