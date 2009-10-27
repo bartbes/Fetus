@@ -46,7 +46,13 @@ for line in content:gmatch("(.-)\n") do
 	end
 	m = line:match("^goto :(%a+)$")
 	if m then
-		output = output .. string.format("goto %%s") .. "\n"
+		output = output .. string.format("goto %%s\n")
+		table.insert(labelinserts, m)
+		count = count + 1
+	end
+	m = line:match("^put :(%a+)$")
+	if m then
+		output = output .. string.format("put %%s\n")
 		table.insert(labelinserts, m)
 		count = count + 1
 	end

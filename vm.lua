@@ -7,6 +7,7 @@ mem = {}
 handles = {}
 address = {"0.0.0.0", 0}
 contexts = {}
+contextpos = {}
 curcontext = 0
 pos = 0
 
@@ -75,7 +76,7 @@ funcs = {
 		local f = io.open(fname, mode)
 		local id = #handles+1
 		table.insert(handles, id, f)
-		table.insert(stack, id)
+		table.insert(stack, id-1)
 	end,
 	[0x0004] = function()		--fileclose
 		local id = stack[1]
@@ -84,7 +85,7 @@ funcs = {
 		handles[id] = nil
 	end,
 	[0x0005] = function()		--read
-		local id, pos, size = stack[1], stack[2], stack[3]
+		local id, pos, size = stack[1]+1, stack[2], stack[3]
 		clear()
 		local text = readfd(handles[id], size-1)
 		for i = 0, size-1 do
@@ -93,7 +94,7 @@ funcs = {
 		table.insert(stack, #text+1)
 	end,
 	[0x0006] = function()		--write
-		local id = stack[1]
+		local id = stack[1]+1
 		table.remove(stack, 1)
 		local text = ""
 		for i, v in ipairs(stack) do
@@ -115,14 +116,14 @@ funcs = {
 		local id = #handles+1
 		table.insert(handles, id, sock)
 		assert(sock:connect(ip, port))
-		table.insert(stack, id)
+		table.insert(stack, id-1)
 	end,
 	[0x0008] = function()		--udp
 		clear()
 		local sock = socket.udp()
 		local id = #handles+1
 		table.insert(handles, id, sock)
-		table.insert(stack, id)
+		table.insert(stack, id-1)
 	end,
 	[0x0009] = function()		--createip
 		local addr, a, b, c, d = stack[1], stack[2], stack[3], stack[4], stack[5]
@@ -134,7 +135,7 @@ funcs = {
 		table.insert(stack, #s)
 	end,
 	[0x000a] = function()		--sendto
-		local id = stack[1]
+		local id = stack[1]+1
 		table.remove(stack, 1)
 		local text = ""
 		while stack[1] ~= 0 do
@@ -170,6 +171,14 @@ funcs = {
 		end
 		table.insert(stack, 0)
 		table.insert(stack, port)
+	end,
+	[0x000d] = function()		--createcontext
+		local s, e = (stack[#stack-1]-1)*3, (stack[#stack])*3
+		clear()
+		local data = contexts[1]:sub(s+1, e)
+		local id = #contexts+1
+		table.insert(contexts, id, data)
+		table.insert(stack, id-1)
 	end,
 	[0xFFFF] = function()		--debug
 		print(stack[#stack])
@@ -291,11 +300,15 @@ commands = {
 		mem[stack[#stack-1]] = stack[#stack]
 	end,
 	[0x19] = function(c)				--ctxt
-		curcontext = c
+		contextpos[curcontext] = pos
+		curcontext = c+1
+		pos = contextpos[curcontext] or 0
 		clear()
 	end,
 	[0x1a] = function()					--ctxts
-		curcontext = stack[#stack]
+		contextpos[curcontext] = pos
+		curcontext = stack[#stack]+1
+		pos = contextpos[curcontext] or 0
 		clear()
 	end,
 }
