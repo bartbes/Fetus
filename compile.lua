@@ -25,6 +25,8 @@ commandlist = {
 	ascii = 0x16,
 	num = 0x17,
 	setp = 0x18,
+	ctxt = 0x19,
+	ctxts = 0x1a,
 }
 
 if not arg then

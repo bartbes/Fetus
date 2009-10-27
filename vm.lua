@@ -6,6 +6,9 @@ stack = {}
 mem = {}
 handles = {}
 address = {"0.0.0.0", 0}
+contexts = {}
+curcontext = 0
+pos = 0
 
 function clear()
 	while #stack ~= 0 do
@@ -195,18 +198,18 @@ commands = {
 	[0x07] = function()			--getp
 		stack[#stack] = mem[stack[#stack]]
 	end,
-	[0x08] = function(pos)		--goto
+	[0x08] = function(p)		--goto
 		local b = stack[#stack] > 0
 		clear()
 		if b then
-			i:seek("set", pos*3)
+			pos = (p-1)*3
 		end
 	end,
 	[0x09] = function()			--gotos
-		local b, pos = stack[#stack-1] > 0, stack[#stack]
+		local b, p = stack[#stack-1] > 0, stack[#stack]
 		clear()
 		if b then
-			i:seek("set", pos*3)
+			pos = (p-1)*3
 		end
 	end,
 	[0x0a] = function()			--add
@@ -265,7 +268,7 @@ commands = {
 	end,
 	[0x15] = function()			--pos
 		clear()
-		table.insert(stack, i:seek()/3)
+		table.insert(stack, pos/3)
 	end,
 	[0x16] = function(address)			--ascii
 		local s = string.format("%d", stack[#stack])
@@ -287,6 +290,14 @@ commands = {
 	[0x18] = function()					--setp
 		mem[stack[#stack-1]] = stack[#stack]
 	end,
+	[0x19] = function(c)				--ctxt
+		curcontext = c
+		clear()
+	end,
+	[0x1a] = function()					--ctxts
+		curcontext = stack[#stack]
+		clear()
+	end,
 }
 
 if not arg then
@@ -307,14 +318,19 @@ if #arg > 1 then
 		table.insert(stack, arg[i])
 	end
 end
-local line = i:read(3)
+local contents = i:read("*a")
+i:close()
+table.insert(contexts, contents)
 local command, args
-while line do
+curcontext = 1
+pos = 0
+local line = contexts[curcontext]:sub(pos+1, pos+3)
+while line ~= "" do
 	command = string.byte(line:sub(1, 1))
 	args = string.byte(line:sub(2, 2))
 	args = args * 256 + string.byte(line:sub(3, 3))
 	commands[command](args)
-	line = i:read(3)
+	pos = pos + 3
+	line = contexts[curcontext]:sub(pos+1, pos+3)
 end
-i:close()
 print()
