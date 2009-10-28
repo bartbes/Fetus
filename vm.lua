@@ -300,16 +300,20 @@ commands = {
 		mem[stack[#stack-1]] = stack[#stack]
 	end,
 	[0x19] = function(c)				--ctxt
+		local oldc = curcontext
 		contextpos[curcontext] = pos
 		curcontext = c+1
 		pos = contextpos[curcontext] or 0
 		clear()
+		table.insert(stack, oldc-1)
 	end,
 	[0x1a] = function()					--ctxts
+		local oldc = curcontext
 		contextpos[curcontext] = pos
 		curcontext = stack[#stack]+1
 		pos = contextpos[curcontext] or 0
 		clear()
+		table.insert(stack, oldc-1)
 	end,
 }
 

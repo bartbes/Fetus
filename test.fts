@@ -1,6 +1,7 @@
 #!./fetus
 
 $context 0001
+$parent 0002
 
 "Global"
 pop 0000
@@ -23,12 +24,15 @@ put 0001
 goto :end
 
 :incontext
+set $parent
+clear 0000
 "Context"
 pop 0000
 put 000a
 put 0000
 call 0001
-ctxt 0000
+get $parent
+ctxts 0000
 :contextend
 
 :end
