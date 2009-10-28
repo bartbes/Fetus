@@ -1,34 +1,60 @@
 #!./fetus
 
 $context 0001
+$parent 0002
 
 "Global"
+	Write the text Global
 pop 0000
 put 000a
 put 0000
+	Add a newline character
 call 0001
+	Output it
 clear 0000
+	Clear the stack
 put :incontext
+	Put the start
 put :contextend
+	And the end
 call 000d
+	Create a new context
 set $context
+	Store its ID
 ctxts 0000
+	Switch to it
+	Here it will return
 clear 0000
+	Clear the stack
 "End of global"
+	Write the text End of global
 pop 0000
 put 000a
 put 0000
+	Add a newline character
 call 0001
+	Output it
 put 0001
 goto :end
+	Go to the end
 
 :incontext
+set $parent
+	Store the parent
+clear 0000
+	Clear the stack
 "Context"
+	Write Context
 pop 0000
 put 000a
 put 0000
+	Add a newline character
 call 0001
-ctxt 0000
+	Output it
+get $parent
+	Get the parent from memory
+ctxts 0000
+	Switch back to the parent
 :contextend
 
 :end
