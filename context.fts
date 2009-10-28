@@ -3,12 +3,8 @@
 $context 0001
 $parent 0002
 
-"Global"
+"Global\n"
 	Write the text Global
-pop 0000
-put 000a
-put 0000
-	Add a newline character
 call 0001
 	Output it
 clear 0000
@@ -26,12 +22,8 @@ ctxts 0000
 	Here it will return
 clear 0000
 	Clear the stack
-"End of global"
+"End of global\n"
 	Write the text End of global
-pop 0000
-put 000a
-put 0000
-	Add a newline character
 call 0001
 	Output it
 put 0001
@@ -43,12 +35,8 @@ set $parent
 	Store the parent
 clear 0000
 	Clear the stack
-"Context"
+"Context\n"
 	Write Context
-pop 0000
-put 000a
-put 0000
-	Add a newline character
 call 0001
 	Output it
 get $parent

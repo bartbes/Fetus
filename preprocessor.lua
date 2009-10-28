@@ -1,6 +1,7 @@
 #!/usr/bin/env lua
 
 function parsestrings(str)
+	str = str:gsub("\\n", "\n")
 	local r = ""
 	for i = 1, #str do
 		r = r .. string.format("put %04x\n", string.byte(str:sub(i, i)))
