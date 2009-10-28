@@ -1,7 +1,15 @@
 #!/usr/bin/env lua
 
+function unescape(str)
+	str = str:gsub("\\(%d%d%d)", string.char)
+	return str:gsub("\\(.)", function(x)
+		local res = loadstring([[return '\]] .. x .. [[']])()
+		return res
+	end)
+end
+
 function parsestrings(str)
-	str = str:gsub("\\n", "\n")
+	str = unescape(str)
 	local r = ""
 	for i = 1, #str do
 		r = r .. string.format("put %04x\n", string.byte(str:sub(i, i)))
