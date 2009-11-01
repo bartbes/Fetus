@@ -139,7 +139,7 @@ void functions(unsigned int function)
 {
 	switch(function)
 	{
-		case 0xFFFF:
+		case 0xFFFF:		//debug
 			cout<<stack.top() <<endl;
 			break;
 	}
