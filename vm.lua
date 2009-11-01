@@ -79,7 +79,7 @@ funcs = {
 		table.insert(stack, id-1)
 	end,
 	[0x0004] = function()		--fileclose
-		local id = stack[1]
+		local id = stack[1]+1
 		clear()
 		handles[id]:close()
 		handles[id] = nil

@@ -114,7 +114,9 @@ template <class I, class V> V GrowHashMap<I, V>::get(I index)
 		if (indices[i] == index)
 			return values[i];
 	}
-	return 0;
+	V temp;
+	memset(&temp, 0, sizeof(V));
+	return temp;
 }
 
 template <class I, class V> void GrowHashMap<I, V>::set(I index, V value)
@@ -136,18 +138,95 @@ template <class I, class V> unsigned int GrowHashMap<I, V>::length()
 	return indices.length();
 }
 
+struct fd
+{
+	int t;
+	bool open;
+	int sock;
+	FILE *file;
+};
+
 GrowFIFO<unsigned int> stack;
 GrowHashMap<unsigned int, unsigned int> mem;
 GrowHashMap<unsigned int, char*> contexts;
+GrowHashMap<unsigned int, fd> handles;
 unsigned int pos, curcontextn;
 const char *curcontext;
 
+char *extractstack(int off = 0)
+{
+	int l;
+	for (int i = off; i < stack.length(); i++)
+	{
+		if (stack[i] == 0)
+		{
+			l = i-off;
+			break;
+		}
+	}
+	char *buffer = new char[l+1];
+	for (int i = 0; i < l; i++)
+	{
+		buffer[i] = (char) stack[i+off];
+	}
+	buffer[l] = 0;
+	return buffer;
+}
+
 void functions(unsigned int function)
 {
-	unsigned int s, e, p;
+	unsigned int s, e, p, m;
 	char *buffer;
+	const char *mode;
+	fd file;
 	switch(function)
 	{
+		case 0x0001:		//output
+			buffer = extractstack();
+			cout<<buffer;
+			delete[] buffer;
+			break;
+		case 0x0003:		//fileopen
+			buffer = extractstack();
+			m = stack[strlen(buffer)+1];
+			stack.clear();
+			if (m == 1)
+				mode = "r";
+			else if (m == 2)
+				mode = "w";
+			else if (m == 3)
+				mode = "a";
+			else
+				return;
+			file.t = 0;
+			file.file = fopen(buffer, mode);
+			file.open = true;
+			delete[] buffer;
+			p = handles.length();
+			handles.insert(p, file);
+			stack.push(p);
+			break;
+		case 0x0004:		//fileclose
+			p = stack.pop();
+			stack.clear();
+			file = handles.get(p);
+			if (!file.open)
+				return;
+			if (file.t == 0)
+				fclose(file.file);
+			file.open = false;
+			break;
+		case 0x0006:		//write
+			p = stack[0];
+			buffer = extractstack(1);
+			stack.clear();
+			file = handles.get(p);
+			if (!file.open || file.t != 0)
+				return;
+			fprintf(file.file, "%s", buffer);
+			fflush(file.file);
+			delete[] buffer;
+			break;
 		case 0x000D:		//createcontext
 			e = (stack.pop()+1)*3;
 			s = (stack.pop()-1)*3;
@@ -156,6 +235,7 @@ void functions(unsigned int function)
 			strncpy(buffer, contexts.get(0), e-s);
 			p = contexts.length();
 			contexts.insert(p, buffer);
+			stack.push(p);
 			break;
 		case 0xFFFF:		//debug
 			cout<<stack.top() <<endl;
