@@ -301,11 +301,11 @@ void commands(unsigned int command, unsigned int arg)
 			break;
 		case 0x0e:			//pow
 			t = stack.pop();
-			stack.push(pow(stack.pop(), t));
+			stack.push((unsigned int) pow((double) stack.pop(), (double) t));
 			break;
 		case 0x0f:			//root
 			t = stack.pop();
-			stack.push(pow(stack.pop(), 1.0/t));
+			stack.push((unsigned int) pow(stack.pop(), 1.0/t));
 			break;
 		case 0x10:			//mod
 			t = stack.pop();
