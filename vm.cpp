@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 #include <cmath>
 
 using namespace std;
@@ -96,6 +97,7 @@ template <class I, class V> class GrowHashMap
 		void insert(I index, V value);
 		V get(I index);
 		void set(I index, V value);
+		unsigned int length();
 };
 
 template <class I, class V> void GrowHashMap<I, V>::insert(I index, V value)
@@ -129,16 +131,32 @@ template <class I, class V> void GrowHashMap<I, V>::set(I index, V value)
 	insert(index, value);
 }
 
+template <class I, class V> unsigned int GrowHashMap<I, V>::length()
+{
+	return indices.length();
+}
+
 GrowFIFO<unsigned int> stack;
 GrowHashMap<unsigned int, unsigned int> mem;
-GrowHashMap<unsigned int, const char*> contexts;
+GrowHashMap<unsigned int, char*> contexts;
 unsigned int pos, curcontextn;
 const char *curcontext;
 
 void functions(unsigned int function)
 {
+	unsigned int s, e, p;
+	char *buffer;
 	switch(function)
 	{
+		case 0x000D:		//createcontext
+			e = (stack.pop()+1)*3;
+			s = (stack.pop()-1)*3;
+			stack.clear();
+			buffer = new char[e-s];
+			strncpy(buffer, contexts.get(0), e-s);
+			p = contexts.length();
+			contexts.insert(p, buffer);
+			break;
 		case 0xFFFF:		//debug
 			cout<<stack.top() <<endl;
 			break;
@@ -299,5 +317,9 @@ int main(int argc, const char **argv)
 		stack.push(n);
 	}
 	parse();
-	delete buffer;
+	while(contexts.length() > 1)
+	{
+		delete[] contexts.get(1);
+	}
+	delete[] contexts.get(0);
 }
