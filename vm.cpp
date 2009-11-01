@@ -131,8 +131,8 @@ template <class I, class V> void GrowHashMap<I, V>::set(I index, V value)
 
 GrowFIFO<unsigned int> stack;
 GrowHashMap<unsigned int, unsigned int> mem;
-GrowFIFO<const char*> contexts;
-int pos, curcontextn;
+GrowHashMap<unsigned int, const char*> contexts;
+unsigned int pos, curcontextn;
 const char *curcontext;
 
 void functions(unsigned int function)
@@ -148,7 +148,7 @@ void functions(unsigned int function)
 void commands(unsigned int command, unsigned int arg)
 {
 	bool b;
-	unsigned int r, p, t, v;
+	unsigned int r, p, t, v, oldcontext;
 	switch(command)
 	{
 		case 0x01:			//get
@@ -249,8 +249,18 @@ void commands(unsigned int command, unsigned int arg)
 			mem.set(stack.pop(), v);
 			break;
 		case 0x19:			//ctxt
+			oldcontext = curcontextn;
+			curcontextn = arg;
+			curcontext = contexts.get(curcontextn);
+			stack.clear();
+			stack.push(oldcontext);
 			break;
 		case 0x1a:			//ctxts
+			oldcontext = curcontextn;
+			curcontextn = stack.pop();
+			curcontext = contexts.get(curcontextn);
+			stack.clear();
+			stack.push(oldcontext);
 			break;
 	}
 }
@@ -259,7 +269,7 @@ void parse()
 {
 	pos = 0;
 	curcontextn = 0;
-	curcontext = contexts[0];
+	curcontext = contexts.get(0);
 	while(curcontext[pos] != 0)
 	{
 		commands((unsigned int) curcontext[pos], (unsigned int) ((unsigned char) curcontext[pos+1] * 256 + (unsigned char) curcontext[pos+2]));
@@ -281,7 +291,7 @@ int main(int argc, const char **argv)
 	char *buffer = new char[l];
 	f.read(buffer, l);
 	f.close();
-	contexts.push(buffer);
+	contexts.insert(0, buffer);
 	unsigned int n;
 	for (int i = 2; i < argc; i++)
 	{
