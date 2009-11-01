@@ -1,38 +1,12 @@
 #!./fetus
 
-$context 0001
-$parent 0002
+put 000a
+set 0001
 
-"Global"
-pop 0000
-put 000a
-put 0000
-call 0001
-clear 0000
-put :incontext
-put :contextend
-call 000d
-set $context
-ctxts 0000
-clear 0000
-"End of global"
-pop 0000
-put 000a
-put 0000
-call 0001
+:loop
+get 0001
 put 0001
-goto :end
-
-:incontext
-set $parent
-clear 0000
-"Context"
-pop 0000
-put 000a
-put 0000
-call 0001
-get $parent
-ctxts 0000
-:contextend
-
-:end
+sub 0000
+call ffff
+set 0001
+goto :loop
