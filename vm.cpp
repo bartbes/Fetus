@@ -173,6 +173,46 @@ char *extractstack(int off = 0)
 	return buffer;
 }
 
+char *extractmem(unsigned int addr)
+{
+	int l;
+	for (int i = addr; i < mem.length(); i++)
+	{
+		if (mem[i] == 0)
+		{
+			l = i-addr;
+			break;
+		}
+	}
+	char *buffer = new char[l+1];
+	for (int i = 0; i < l; i++)
+	{
+		buffer[i] = (char) mem[i+addr];
+	}
+	buffer[l] = 0;
+	return buffer;
+}
+
+void insertstack(const char *text)
+{
+	int l = strlen(text);
+	for (int i = 0; i < l; i++)
+	{
+		stack.push(text[i]);
+	}
+	stack.push(0);
+}
+
+void insertmem(unsigned int addr, const char *text)
+{
+	int l = strlen(text);
+	for (int i = 0; i < l; i++)
+	{
+		mem.set(addr+i, text[i]);
+	}
+	mem.set(addr+l, 0);
+}
+
 void functions(unsigned int function)
 {
 	unsigned int s, e, p, m;
