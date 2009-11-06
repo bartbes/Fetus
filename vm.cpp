@@ -310,6 +310,7 @@ void commands(unsigned int command, unsigned int arg)
 {
 	bool b;
 	unsigned int r, p, t, v, oldcontext;
+	char *buffer;
 	switch(command)
 	{
 		case 0x01:			//get
@@ -402,8 +403,15 @@ void commands(unsigned int command, unsigned int arg)
 			stack.push(pos/3);
 			break;
 		case 0x16:			//ascii
+			buffer = new char[16];
+			sprintf(buffer, "%d", stack.top());
+			insertmem(arg, buffer);
+			delete[] buffer;
 			break;
 		case 0x17:			//num
+			buffer = extractmem(arg);
+			sscanf(buffer, "%d", &t);
+			stack.push(t);
 			break;
 		case 0x18:			//setp
 			v = stack.pop();
