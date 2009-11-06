@@ -215,8 +215,9 @@ void insertmem(unsigned int addr, const char *text)
 
 void functions(unsigned int function)
 {
-	unsigned int s, e, p, m;
+	unsigned int s, e, p, m, id;
 	char *buffer;
+	std::string strbuffer;
 	const char *mode;
 	fd file;
 	switch(function)
@@ -225,6 +226,14 @@ void functions(unsigned int function)
 			buffer = extractstack();
 			cout<<buffer;
 			delete[] buffer;
+			break;
+		case 0x0002:		//input
+			p = stack[0];
+			s = stack[1];
+			stack.clear();
+			getline(cin, strbuffer);
+			strbuffer = strbuffer.substr(s);
+			insertmem(p, strbuffer.c_str());
 			break;
 		case 0x0003:		//fileopen
 			buffer = extractstack();
@@ -255,6 +264,20 @@ void functions(unsigned int function)
 			if (file.t == 0)
 				fclose(file.file);
 			file.open = false;
+			break;
+		case 0x0005:		//read
+			id = stack[0];
+			p = stack[1];
+			s = stack[2];
+			stack.clear();
+			file = handles.get(p);
+			if (!file.open || file.t != 0)
+				return;
+			buffer = new[s+1];
+			fread(buffer, 1, s, file.file);
+			buffer[s] = 0;
+			insertmem(p, buffer);
+			delete[] buffer;
 			break;
 		case 0x0006:		//write
 			p = stack[0];
