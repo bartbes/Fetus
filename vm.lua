@@ -73,7 +73,7 @@ funcs = {
 		elseif mode == 3 then
 			mode = "a"
 		end
-		local f = io.open(fname, mode)
+		local f = assert(io.open(fname, mode))
 		local id = #handles+1
 		table.insert(handles, id, f)
 		table.insert(stack, id-1)
