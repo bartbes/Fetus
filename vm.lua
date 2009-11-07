@@ -332,7 +332,7 @@ if not i then
 end
 if #arg > 1 then
 	for i = 2, #arg do
-		table.insert(stack, arg[i])
+		table.insert(stack, tonumber(arg[i]))
 	end
 end
 local contents = i:read("*a")
