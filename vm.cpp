@@ -149,6 +149,7 @@ struct fd
 GrowFIFO<unsigned int> stack;
 GrowHashMap<unsigned int, unsigned int> mem;
 GrowHashMap<unsigned int, char*> contexts;
+GrowHashMap<unsigned int, unsigned int> contextposses;
 GrowHashMap<unsigned int, fd> handles;
 unsigned int pos, curcontextn;
 const char *curcontext;
@@ -418,16 +419,20 @@ void commands(unsigned int command, unsigned int arg)
 			mem.set(stack.pop(), v);
 			break;
 		case 0x19:			//ctxt
+			posses.set(curcontextn, pos);
 			oldcontext = curcontextn;
 			curcontextn = arg;
 			curcontext = contexts.get(curcontextn);
+			pos = posses.get(curcontextn);
 			stack.clear();
 			stack.push(oldcontext);
 			break;
 		case 0x1a:			//ctxts
+			posses.set(curcontextn, pos);
 			oldcontext = curcontextn;
 			curcontextn = stack.pop();
 			curcontext = contexts.get(curcontextn);
+			pos = posses.get(curcontextn);
 			stack.clear();
 			stack.push(oldcontext);
 			break;
