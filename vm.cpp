@@ -270,7 +270,7 @@ void functions(unsigned int function)
 			p = stack[1];
 			s = stack[2];
 			stack.clear();
-			file = handles.get(p);
+			file = handles.get(id);
 			if (!file.open || file.t != 0)
 				return;
 			buffer = new char[s+1];
