@@ -153,6 +153,8 @@ GrowHashMap<unsigned int, unsigned int> posses;
 GrowHashMap<unsigned int, fd> handles;
 unsigned int pos, curcontextn;
 const char *curcontext;
+char *storedip = NULL;
+unsigned int storedport;
 
 char *extractstack(int off = 0)
 {
@@ -290,6 +292,18 @@ void functions(unsigned int function)
 			fprintf(file.file, "%s", buffer);
 			fflush(file.file);
 			delete[] buffer;
+			break;
+		case 0x000B:		//storeaddress
+			if (storedip)
+				delete[] storedip;
+			storedip = extractstack();
+			storedport = stack[strlen(storedip)];
+			stack.clear();
+			break;
+		case 0x000C:		//getaddress
+			stack.clear();
+			insertstack(storedip);
+			stack.push(storedport);
 			break;
 		case 0x000D:		//createcontext
 			e = (stack.pop()+1)*3;
