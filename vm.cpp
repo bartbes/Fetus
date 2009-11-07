@@ -175,19 +175,19 @@ char *extractstack(int off = 0)
 
 char *extractmem(unsigned int addr)
 {
-	int l;
-	for (int i = addr; i < mem.length(); i++)
+	unsigned int l;
+	for (unsigned int i = addr; i < mem.length(); i++)
 	{
-		if (mem[i] == 0)
+		if (mem.get(i) == 0)
 		{
 			l = i-addr;
 			break;
 		}
 	}
 	char *buffer = new char[l+1];
-	for (int i = 0; i < l; i++)
+	for (unsigned int i = 0; i < l; i++)
 	{
-		buffer[i] = (char) mem[i+addr];
+		buffer[i] = (char) mem.get(i+addr);
 	}
 	buffer[l] = 0;
 	return buffer;
@@ -273,7 +273,7 @@ void functions(unsigned int function)
 			file = handles.get(p);
 			if (!file.open || file.t != 0)
 				return;
-			buffer = new[s+1];
+			buffer = new char[s+1];
 			fread(buffer, 1, s, file.file);
 			buffer[s] = 0;
 			insertmem(p, buffer);
