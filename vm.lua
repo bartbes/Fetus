@@ -73,7 +73,7 @@ funcs = {
 		elseif mode == 3 then
 			mode = "a"
 		end
-		local f = io.open(fname, mode)
+		local f = assert(io.open(fname, mode))
 		local id = #handles+1
 		table.insert(handles, id, f)
 		table.insert(stack, id-1)
@@ -332,7 +332,7 @@ if not i then
 end
 if #arg > 1 then
 	for i = 2, #arg do
-		table.insert(stack, arg[i])
+		table.insert(stack, tonumber(arg[i]))
 	end
 end
 local contents = i:read("*a")
