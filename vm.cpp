@@ -149,7 +149,7 @@ struct fd
 GrowFIFO<unsigned int> stack;
 GrowHashMap<unsigned int, unsigned int> mem;
 GrowHashMap<unsigned int, char*> contexts;
-GrowHashMap<unsigned int, unsigned int> contextposses;
+GrowHashMap<unsigned int, unsigned int> posses;
 GrowHashMap<unsigned int, fd> handles;
 unsigned int pos, curcontextn;
 const char *curcontext;
@@ -293,10 +293,10 @@ void functions(unsigned int function)
 			break;
 		case 0x000D:		//createcontext
 			e = (stack.pop()+1)*3;
-			s = (stack.pop()-1)*3;
+			s = (stack.pop())*3;
 			stack.clear();
 			buffer = new char[e-s];
-			strncpy(buffer, contexts.get(0), e-s);
+			memcpy(buffer, contexts.get(0)+s, e-s);
 			p = contexts.length();
 			contexts.insert(p, buffer);
 			stack.push(p);
@@ -473,9 +473,8 @@ int main(int argc, const char **argv)
 		stack.push(n);
 	}
 	parse();
-	while(contexts.length() > 1)
+	for (int i = 0; i < contexts.length(); i++)
 	{
-		delete[] contexts.get(1);
+		delete[] contexts.get(i);
 	}
-	delete[] contexts.get(0);
 }
