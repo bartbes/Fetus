@@ -1,0 +1,109 @@
+Rot13
+
+$value 0001
+$lower 0002
+
+set $value
+goto :begin
+	Check command line arguments
+
+"Usage: rot13.fts <text>\n"
+call 0001
+finish
+
+:check
+get $value
+put 0041
+lt 0000
+not 0000
+goto :checkb
+put 0001
+goto :nextval
+
+:checkb
+get $value
+put 005a
+gt 0000
+not 0000
+goto :upper
+put 0001
+goto :checkc
+
+:checkc
+get $value
+put 0061
+lt 0000
+not 0000
+goto :checkd
+put 0001
+goto :nextval
+
+:checkd
+get $value
+put 007a
+gt 0000
+not 0000
+goto :lower
+put 0001
+goto :nextval
+
+:lower
+put 0001
+set $lower
+goto :rot
+
+:upper
+put 0000
+set $lower
+put 0001
+goto :rot
+
+:limit
+get $lower
+goto :limitlow
+put 0001
+goto :limitup
+
+:limitlow
+get $value
+put 007a
+gt 0000
+goto :min
+put 0001
+goto :outandnext
+
+:limitup
+get $value
+put 005a
+gt 0000
+goto :min
+put 0001
+goto :outandnext
+
+:min
+get $value
+put 0019
+sub 0000
+set $value
+goto :outandnext
+
+:rot
+get $value
+put 000d
+add 0000
+set $value
+goto :limit
+
+:outandnext
+get $value
+put 0000
+call 0001
+put 0001
+goto :nextval
+
+:nextval
+finish
+
+:begin
+put 0001
+goto :check
