@@ -34,7 +34,9 @@ end
 if not arg[2] then arg[2] = "a.ftsp" end
 local o = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 local content = i:read("*a")
+content = content:gsub("\r\n", "\n")
 content = content:gsub("\"(.-)\"", parsestrings)
+content = content:gsub("\nfinish\n", "\nput 0001\ngoto :end\n")
 if content:sub(1, 2) == "#!" then
 	content = content:match("#!.-\n(.*)")
 end
@@ -74,6 +76,9 @@ for line in content:gmatch("(.-)\n") do
 		count = count + 1
 		output = output .. string.format("%s %04x\n", m, vars[addr])
 	end
+end
+if not labels["end"] then
+	labels["end"] = count
 end
 for i, v in ipairs(labelinserts) do
 	labelinserts[i] = string.format("%04x", labels[v] or 0)
