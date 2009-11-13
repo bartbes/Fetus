@@ -43,7 +43,7 @@ if not i then
 	return 1
 end
 if not arg[2] then arg[2] = "a.ftsb" end
-local o = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
+local o = arg[2] == "-" and io.stdout or io.open(arg[2], "wb")
 if not o then
 	print("Could not open file " .. arg[2])
 	return 1

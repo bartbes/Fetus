@@ -325,7 +325,7 @@ if #arg < 1 then
 	print("Usage: " .. arg[0] .. " <infile>")
 	return 1
 end
-i = arg[1] == "-" and io.stdin or io.open(arg[1])
+i = arg[1] == "-" and io.stdin or io.open(arg[1], "rb")
 if not i then
 	print("Could not open file " .. arg[1])
 	return 1
