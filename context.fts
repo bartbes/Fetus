@@ -3,6 +3,7 @@
 $context 0001
 $parent 0002
 
+clear 0000
 "Global\n"
 	Write the text Global
 call 0001
