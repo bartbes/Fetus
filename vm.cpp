@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#include <sstream>
 
 using namespace std;
 
@@ -178,14 +179,10 @@ char *extractstack(int off = 0)
 
 char *extractmem(unsigned int addr)
 {
-	unsigned int l;
-	for (unsigned int i = addr; i < mem.length(); i++)
+	unsigned int l = 0;
+	while (mem.get(addr+l) != 0)
 	{
-		if (mem.get(i) == 0)
-		{
-			l = i-addr;
-			break;
-		}
+		++l;
 	}
 	char *buffer = new char[l+1];
 	for (unsigned int i = 0; i < l; i++)
@@ -219,8 +216,10 @@ void insertmem(unsigned int addr, const char *text)
 void functions(unsigned int function)
 {
 	unsigned int s, e, p, m, id;
+	unsigned int a, b, c, d;
 	char *buffer;
 	std::string strbuffer;
+	std::stringstream strstream;
 	const char *mode;
 	fd file;
 	switch(function)
@@ -249,7 +248,10 @@ void functions(unsigned int function)
 			else if (m == 3)
 				mode = "a";
 			else
+			{
+				delete[] buffer;
 				return;
+			}
 			file.t = 0;
 			file.file = fopen(buffer, mode);
 			file.open = true;
@@ -293,6 +295,18 @@ void functions(unsigned int function)
 			fflush(file.file);
 			delete[] buffer;
 			break;
+		case 0x0009:		//createip
+			p = stack[0];
+			a = stack[1];
+			b = stack[2];
+			c = stack[3];
+			d = stack[4];
+			strstream <<a <<"." <<b <<"." <<c <<"." <<d;
+			strbuffer = strstream.str();
+			insertmem(p, strbuffer.c_str());
+			stack.clear();
+			stack.push(strbuffer.length());
+			break;
 		case 0x000B:		//storeaddress
 			if (storedip)
 				delete[] storedip;
@@ -314,6 +328,20 @@ void functions(unsigned int function)
 			p = contexts.length();
 			contexts.insert(p, buffer);
 			stack.push(p);
+			break;
+		case 0x000E:		//stacktomem
+			p = stack[0];
+			buffer = extractstack(1);
+			stack.clear();
+			insertmem(p, buffer);
+			delete[] buffer;
+			break;
+		case 0x000F:		//memtostack
+			p = stack[0];
+			stack.clear();
+			buffer = extractmem(p);
+			insertstack(buffer);
+			delete[] buffer;
 			break;
 		case 0xFFFF:		//debug
 			cout<<stack.top() <<endl;
@@ -427,6 +455,7 @@ void commands(unsigned int command, unsigned int arg)
 			buffer = extractmem(arg);
 			sscanf(buffer, "%d", &t);
 			stack.push(t);
+			delete[] buffer;
 			break;
 		case 0x18:			//setp
 			v = stack.pop();

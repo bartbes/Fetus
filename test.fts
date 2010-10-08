@@ -1,30 +1,17 @@
 #!./fetus
 
-"test.txt"
-put 0002
-call 0003
-set 0001
-clear 0000
-get 0001
-"Hello, world!\n"
-call 0006
-clear 0000
-get 0001
-call 0004
-clear 0000
-"test.txt"
+$ip 0100
+
+put $ip
+put 007F
+put 0000
+put 0000
 put 0001
-call 0003
-set 0001
+call 0009
 clear 0000
-get 0001
-put 0010
-put 000e
-call 0005
-clear 0000
-get 0001
-call 0004
-clear 0000
-get 0011
+put $ip
+call 000F
+pop 0000
+put 000A
 put 0000
 call 0001
