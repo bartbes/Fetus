@@ -4,6 +4,9 @@
 #include <cstring>
 #include <cmath>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 using namespace std;
 
@@ -217,7 +220,7 @@ void functions(unsigned int function)
 {
 	unsigned int s, e, p, m, id;
 	unsigned int a, b, c, d;
-	char *buffer;
+	char *buffer, *ipbuffer;
 	std::string strbuffer;
 	std::stringstream strstream;
 	const char *mode;
@@ -260,14 +263,22 @@ void functions(unsigned int function)
 			handles.insert(p, file);
 			stack.push(p);
 			break;
-		case 0x0004:		//fileclose
+		case 0x0004:		//close
 			p = stack.pop();
 			stack.clear();
 			file = handles.get(p);
 			if (!file.open)
 				return;
-			if (file.t == 0)
-				fclose(file.file);
+			switch (file.t)
+			{
+				case 0:
+					fclose(file.file);
+					break;
+				case 1:
+				case 2:
+					close(file.sock);
+					break;
+			}
 			file.open = false;
 			break;
 		case 0x0005:		//read
@@ -276,12 +287,23 @@ void functions(unsigned int function)
 			s = stack[2];
 			stack.clear();
 			file = handles.get(id);
-			if (!file.open || file.t != 0)
+			if (!file.open)
 				return;
 			buffer = new char[s+1];
-			fread(buffer, 1, s, file.file);
-			buffer[s] = 0;
-			insertmem(p, buffer);
+			switch (file.t)
+			{
+				case 0:
+					fread(buffer, 1, s, file.file);
+					buffer[s] = 0;
+					insertmem(p, buffer);
+					break;
+				case 1:
+				case 2:
+					recv(file.sock, buffer, s, 0);
+					buffer[s] = 0;
+					insertmem(p, buffer);
+					break;
+			}
 			delete[] buffer;
 			break;
 		case 0x0006:		//write
@@ -289,11 +311,48 @@ void functions(unsigned int function)
 			buffer = extractstack(1);
 			stack.clear();
 			file = handles.get(p);
-			if (!file.open || file.t != 0)
+			if (!file.open)
 				return;
-			fprintf(file.file, "%s", buffer);
-			fflush(file.file);
+			switch (file.t)
+			{
+				case 0:
+					fprintf(file.file, "%s", buffer);
+					fflush(file.file);
+					break;
+				case 1:
+					send(file.sock, buffer, strlen(buffer), 0);
+					break;
+			}
 			delete[] buffer;
+			break;
+		case 0x0007:		//tcp
+			ipbuffer = extractstack(0);
+			p = stack[strlen(ipbuffer)+1];
+			stack.clear();
+			s = socket(AF_INET, SOCK_STREAM, 0);
+			file.t = 1;
+			file.sock = s;
+			{
+				sockaddr_in sa;
+				sa.sin_family = AF_INET;
+				inet_pton(AF_INET, ipbuffer, &sa.sin_addr);
+				sa.sin_port = htons(p);
+				file.open = (file.sock != -1 && connect(file.sock, (sockaddr*) &sa, sizeof(sockaddr_in)) != -1);
+			}
+			id = handles.length();
+			handles.insert(id, file);
+			stack.push(id);
+			delete[] ipbuffer;
+			break;
+		case 0x0008:		//udp
+			stack.clear();
+			s = socket(AF_INET, SOCK_DGRAM, 0);
+			file.t = 2;
+			file.sock = s;
+			file.open = (s != -1);
+			p = handles.length();
+			handles.insert(p, file);
+			stack.push(p);
 			break;
 		case 0x0009:		//createip
 			p = stack[0];
@@ -306,6 +365,25 @@ void functions(unsigned int function)
 			insertmem(p, strbuffer.c_str());
 			stack.clear();
 			stack.push(strbuffer.length());
+			break;
+		case 0x000A:		//sendto
+			id = stack[0];
+			buffer = extractstack(1);
+			ipbuffer = extractstack(strlen(buffer)+2);
+			p = stack[strlen(buffer)+strlen(ipbuffer)+3];
+			stack.clear();
+			file = handles.get(id);
+			if (!file.open || file.t != 2)
+				return;
+			{
+				sockaddr_in sa;
+				sa.sin_family = AF_INET;
+				inet_pton(AF_INET, ipbuffer, &sa.sin_addr);
+				sa.sin_port = htons(p);
+				sendto(file.sock, buffer, strlen(buffer), 0, (sockaddr*) &sa, sizeof(sockaddr));
+			}
+			delete[] buffer;
+			delete[] ipbuffer;
 			break;
 		case 0x000B:		//storeaddress
 			if (storedip)
