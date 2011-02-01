@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 using namespace std;
 
@@ -333,11 +334,23 @@ void functions(unsigned int function)
 			file.t = 1;
 			file.sock = s;
 			{
-				sockaddr_in sa;
-				sa.sin_family = AF_INET;
-				inet_pton(AF_INET, ipbuffer, &sa.sin_addr);
-				sa.sin_port = htons(p);
-				file.open = (file.sock != -1 && connect(file.sock, (sockaddr*) &sa, sizeof(sockaddr_in)) != -1);
+				addrinfo hints, *servinfo;
+				memset(&hints, 0, sizeof(addrinfo));
+				hints.ai_family = AF_UNSPEC;
+				hints.ai_socktype = SOCK_STREAM;
+				char port[6];
+				sprintf(port, "%d", p);
+				if (getaddrinfo(ipbuffer, port, &hints, &servinfo) != 0)
+				{
+					delete[] ipbuffer;
+					id = handles.length();
+					file.open = false;
+					handles.insert(id, file);
+					stack.push(id);
+					return;
+				}
+				file.open = (file.sock != -1 && connect(file.sock, servinfo->ai_addr, servinfo->ai_addrlen) != -1);
+				freeaddrinfo(servinfo);
 			}
 			id = handles.length();
 			handles.insert(id, file);
@@ -376,11 +389,23 @@ void functions(unsigned int function)
 			if (!file.open || file.t != 2)
 				return;
 			{
-				sockaddr_in sa;
-				sa.sin_family = AF_INET;
-				inet_pton(AF_INET, ipbuffer, &sa.sin_addr);
-				sa.sin_port = htons(p);
-				sendto(file.sock, buffer, strlen(buffer), 0, (sockaddr*) &sa, sizeof(sockaddr));
+				addrinfo hints, *servinfo;
+				memset(&hints, 0, sizeof(addrinfo));
+				hints.ai_family = AF_UNSPEC;
+				hints.ai_socktype = SOCK_STREAM;
+				char port[6];
+				sprintf(port, "%d", p);
+				if (getaddrinfo(ipbuffer, port, &hints, &servinfo) != 0)
+				{
+					delete[] ipbuffer;
+					id = handles.length();
+					file.open = false;
+					handles.insert(id, file);
+					stack.push(id);
+					return;
+				}
+				sendto(file.sock, buffer, strlen(buffer), 0, servinfo->ai_addr, servinfo->ai_addrlen);
+				freeaddrinfo(servinfo);
 			}
 			delete[] buffer;
 			delete[] ipbuffer;

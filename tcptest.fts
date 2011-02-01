@@ -3,7 +3,7 @@
 $sock 0001
 	Declare $sock
 
-"127.0.0.1"
+"localhost"
 	The server/ip, well, localhost
 put 270f
 	The port, translates to 9999
