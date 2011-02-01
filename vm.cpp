@@ -359,10 +359,13 @@ void functions(unsigned int function)
 			break;
 		case 0x0008:		//udp
 			stack.clear();
-			s = socket(AF_INET, SOCK_DGRAM, 0);
+			s = socket(AF_INET6, SOCK_DGRAM, 0);
 			file.t = 2;
 			file.sock = s;
 			file.open = (s != -1);
+			a = 0;
+			if (file.open)
+				setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &a, sizeof(a));
 			p = handles.length();
 			handles.insert(p, file);
 			stack.push(p);
