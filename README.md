@@ -3,6 +3,7 @@ Fetus is a small assembly-like language, its bytecode compiler, and most importa
 
 ###The language###
 The Fetus language is assembly like, but enforces strict rules on syntax.
+
 1. Each command has a separate line
 2. Every line consists of 2 parts, a command and an argument.
 3. The command is an ascii string, usually 3 or 4 characters.
