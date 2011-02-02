@@ -1,0 +1,57 @@
+#!./fetus
+
+$sock 0001
+	$sock will be used for our socket
+$file 0002
+	$file will be used for our file handle
+$buffer 0010
+	$buffer will be a 16-value buffer
+
+"localhost"
+	Localhost (ipv6)
+put 04bc
+	Port 1212
+call 0007
+set $sock
+clear 0000
+	Connect, store socket and clear stack
+
+"Connected\n"
+call 0001
+
+"output"
+put 0002
+call 0003
+set $file
+	Open file 'output' for writing and store in $file
+
+"Opened everything\n"
+call 0001
+
+clear 0000
+get $sock
+put $buffer
+put 0020
+call 0005
+	Read 16 bytes and store them in the buffer
+clear 0000
+
+"Read the data\n"
+call 0001
+
+get $file
+	Get the file handle
+put $buffer
+call 000f
+	Get the buffer from memory and dump it on the stack
+call 0006
+	Write to the file
+
+"Wrote the data\n"
+call 0001
+
+get $sock
+call 0004
+get $file
+call 0004
+	Close the handles

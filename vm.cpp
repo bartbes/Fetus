@@ -443,7 +443,7 @@ void functions(unsigned int function)
 			delete[] buffer;
 			break;
 		case 0x000F:		//memtostack
-			p = stack[0];
+			p = stack[stack.length()-1];
 			stack.clear();
 			buffer = extractmem(p);
 			insertstack(buffer);
