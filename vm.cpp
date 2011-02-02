@@ -444,9 +444,7 @@ void functions(unsigned int function)
 			delete[] buffer;
 			break;
 		case 0x000F:		//memtostack
-			p = stack.top();
-			stack.pop();
-			//stack.clear();
+			p = stack.pop();
 			buffer = extractmem(p);
 			insertstack(buffer);
 			delete[] buffer;
