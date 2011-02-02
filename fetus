@@ -1,7 +1,13 @@
 #!/bin/bash
 
-if [ -z "$VM" ]; then
-	VM=./fetus_vm
+if [ -z "$FETUS_PP" ]; then
+	FETUS_PP=./preprocessor.lua
+fi
+if [ -z "$FETUS_C" ]; then
+	FETUS_C=./compile.lua
+fi
+if [ -z "$FETUS_VM" ]; then
+	FETUS_VM=./fetus_vm
 fi
 
-./preprocessor.lua $1 - | ./compile.lua - - | $VM - $2 $3 $4 $5 $6 $7 $8 $9
+$FETUS_PP $1 - | $FETUS_C - - | $FETUS_VM - $2 $3 $4 $5 $6 $7 $8 $9
