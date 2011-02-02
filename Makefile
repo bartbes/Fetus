@@ -1,7 +1,10 @@
 CXX=g++
 
-all: vm
+all: fetus_vm
 
-vm: vm.cpp
+fetus_vm: vm.cpp
 	$(CXX) -o $@ $^
+
+clean:
+	rm -rIf fetus_vm
 
