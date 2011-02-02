@@ -291,6 +291,7 @@ void functions(unsigned int function)
 			if (!file.open)
 				return;
 			buffer = new char[s+1];
+			memset(buffer, 0, s+1);
 			switch (file.t)
 			{
 				case 0:
@@ -443,8 +444,9 @@ void functions(unsigned int function)
 			delete[] buffer;
 			break;
 		case 0x000F:		//memtostack
-			p = stack[stack.length()-1];
-			stack.clear();
+			p = stack.top();
+			stack.pop();
+			//stack.clear();
 			buffer = extractmem(p);
 			insertstack(buffer);
 			delete[] buffer;
