@@ -28,7 +28,7 @@ if #arg < 1 then
 end
 local i = arg[1] == "-" and io.stdin or io.open(arg[1])
 if not i then
-	print("Could not open file " .. arg[i])
+	print("Could not open file " .. arg[1])
 	return 1
 end
 if not arg[2] then arg[2] = "a.ftsp" end

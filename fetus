@@ -22,4 +22,30 @@ if [ ! -f "$FETUS_VM" ]; then
 	exit 1
 fi
 
+while getopts ":ECo:" opt; do
+	case $opt in
+		E)
+			PREPROCESS_ONLY=1
+			;;
+		C)
+			COMPILE_ONLY=1
+			;;
+		o)
+			OUTPUT_NAME=$OPTARG
+			;;
+	esac
+	shift $((OPTIND-1))
+	OPTIND=$((OPTIND-1))
+done
+
+if [ $PREPROCESS_ONLY ]; then
+	$FETUS_PP $1 $OUTPUT_NAME
+	exit 0
+fi
+
+if [ $COMPILE_ONLY ]; then
+	$FETUS_PP $1 - | $FETUS_C - $OUTPUT_NAME
+	exit 0
+fi
+
 $FETUS_PP $1 - | $FETUS_C - - | $FETUS_VM - $2 $3 $4 $5 $6 $7 $8 $9
