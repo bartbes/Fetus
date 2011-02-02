@@ -1,0 +1,44 @@
+#!/usr/bin/env lua
+
+input = io.open(arg[1], "r")
+output = io.open(arg[2], "w")
+
+text = [[
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstring>
+#include "vm_core.h"
+
+using namespace std;
+
+char program[] = {
+%s
+};
+
+int main(int argc, const char **argv)
+{
+	contexts.insert(0, program);
+	unsigned int n;
+	for (int i = 1; i < argc; i++)
+	{
+		sscanf(argv[i], "%%u", &n);
+		stack.push(n);
+	}
+	parse();
+	for (int i = 1; i < contexts.length(); i++)
+	{
+		delete[] contexts.get(i);
+	}
+	return 0;
+}
+]]
+
+program = ""
+
+char = input:read(1)
+while char do
+	program = ("%s, 0x%x"):format(program, char:byte())
+	char = input:read(1)
+end
+output:write(text:format(program:sub(3, -1)))
