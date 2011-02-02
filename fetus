@@ -4,5 +4,4 @@ if [ -z "$VM" ]; then
 	VM=./a.out
 fi
 
-./preprocessor.lua $1 - | ./compile.lua - > /dev/null
-$VM a.ftsb $2 $3 $4 $5 $6 $7 $8 $9
+./preprocessor.lua $1 - | ./compile.lua - - | $VM - $2 $3 $4 $5 $6 $7 $8 $9
