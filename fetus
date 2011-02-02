@@ -1,10 +1,10 @@
 #!/bin/bash
 
 if [ -z "$FETUS_PP" ]; then
-	FETUS_PP=./preprocessor
+	FETUS_PP=./fetus_pp
 fi
 if [ -z "$FETUS_C" ]; then
-	FETUS_C=./compile
+	FETUS_C=./fetus_c
 fi
 if [ -z "$FETUS_VM" ]; then
 	FETUS_VM=./fetus_vm

@@ -1,10 +1,18 @@
 CXX=g++
+CP=cp -r
+RM=rm -rIf
 
-all: fetus_vm
+all: fetus_pp fetus_c fetus_vm
 
-fetus_vm: vm.cpp
+fetus_vm: src/vm.cpp
 	$(CXX) -o $@ $^
 
+fetus_pp: src/preprocessor.lua
+	$(CP) $^ $@
+
+fetus_c: src/compiler.lua
+	$(CP) $^ $@
+
 clean:
-	rm -rIf fetus_vm
+	$(RM) fetus_vm fetus_c fetus_pp
 
