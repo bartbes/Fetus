@@ -47,9 +47,11 @@ set $cur
 call ffff
 	Run it through debug to print it painlessly
 get $num
+get $num
 put 0001
 sub 0000
 set $num
 	Decrease the number of outputs by 1
+pop 0000
 goto :loop
 	If more than 0 times left, loop
