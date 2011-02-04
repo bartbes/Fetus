@@ -86,7 +86,7 @@ local scripts = {
 	end,
 	["]"] = function()
 		local pos = table.remove(posses)
-		local pos_a, pos_b = math.floor(pos/0xff), pos%0xff
+		local pos_a, pos_b = math.floor(pos/256), pos%256
 		return {
 			--loop if non-zero
 			0x01, 0x00, 0x00, --get 0000
