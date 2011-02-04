@@ -51,7 +51,7 @@ funcs = {
 	[0x0002] = function()		--input
 		local pos, size = stack[1], stack[2]
 		clear()
-		local text = io.read():sub(1, size-1)
+		local text = io.read():sub(1, size)
 		for i = 0, size-1 do
 			mem[pos+i] = text:sub(i+1, i+1) and string.byte(text:sub(i+1, i+1)) or 0
 		end

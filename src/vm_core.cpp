@@ -237,9 +237,12 @@ void functions(unsigned int function)
 			p = stack[0];
 			s = stack[1];
 			stack.clear();
-			getline(cin, strbuffer);
-			strbuffer = strbuffer.substr(s);
-			insertmem(p, strbuffer.c_str());
+			buffer = new char[s+1];
+			memset(buffer, 0, s+1);
+			if (cin.good())
+				cin.read(buffer, s);
+			insertmem(p, buffer);
+			delete[] buffer;
 			break;
 		case 0x0003:		//fileopen
 			buffer = extractstack();
@@ -565,7 +568,8 @@ void commands(unsigned int command, unsigned int arg)
 			break;
 		case 0x18:			//setp
 			v = stack.pop();
-			mem.set(stack.pop(), v);
+			p = stack.pop();
+			mem.set(p, v);
 			break;
 		case 0x19:			//ctxt
 			posses.set(curcontextn, pos);
