@@ -44,6 +44,10 @@ function commands.put(num)
 	return addcode(0x03, numtoarg(num))
 end
 
+function commands.get(var)
+	return addcode(0x01, numtoarg(vars[var]))
+end
+
 function commands.set(var)
 	return addcode(0x02, numtoarg(vars[var]))
 end
@@ -56,6 +60,11 @@ local function parse(expression)
 	local results = {expression:match("^(%d+)$")}
 	if #results == 1 then
 		commands.put(results[1])
+		return
+	end
+	results = {expression:match("^(%w+)$")}
+	if #results == 1 then
+		commands.get(results[1])
 		return
 	end
 	results = {expression:match("^(%w+)%s*=%s*(.+)$")}
