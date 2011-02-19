@@ -23,9 +23,10 @@ if not output then
 end
 
 local vars = {}
-local num_vars = 0
+local num_vars = 1
 local stack_depth = 0
 local code = {}
+local line_ip = 0
 local commands = {}
 
 local function numtoarg(num)
@@ -65,7 +66,17 @@ function commands.sub()
 	return addcode(0x0b, 0x00, 0x00)
 end
 
+local function parse_brackets(exp)
+end
+
 local function parse(expression)
+	if expression:match("^%s*%.%s*$") then
+		table.insert(code, line_ip, 0x00)
+		table.insert(code, line_ip, 0x00)
+		table.insert(code, line_ip, 0x02)
+		addcode(0x01, 0x00, 0x00)
+		return
+	end
 	local results = {expression:match("^%s*(%d+)%s*$")}
 	if #results == 1 then
 		commands.put(results[1])
@@ -116,6 +127,7 @@ end
 for line in input:lines() do
 	linenum = linenum + 1
 	parse(line)
+	line_ip = #code+1
 end
 
 for i, v in ipairs(code) do
