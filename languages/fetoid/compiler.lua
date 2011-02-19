@@ -24,6 +24,7 @@ end
 
 local vars = {}
 local num_vars = 0
+local stack_depth = 0
 local code = {}
 local commands = {}
 
@@ -56,18 +57,28 @@ function commands.call(func)
 	return addcode(0x05, numtoarg(func))
 end
 
+function commands.add()
+	return addcode(0x0a, 0x00, 0x00)
+end
+
+function commands.sub()
+	return addcode(0x0b, 0x00, 0x00)
+end
+
 local function parse(expression)
-	local results = {expression:match("^(%d+)$")}
+	local results = {expression:match("^%s*(%d+)%s*$")}
 	if #results == 1 then
 		commands.put(results[1])
+		stack_depth = stack_depth + 1
 		return
 	end
-	results = {expression:match("^(%w+)$")}
+	results = {expression:match("^%s*(%w+)%s*$")}
 	if #results == 1 then
 		commands.get(results[1])
+		stack_depth = stack_depth + 1
 		return
 	end
-	results = {expression:match("^(%w+)%s*=%s*(.+)$")}
+	results = {expression:match("^%s*(%w+)%s*=%s*(.+)%s*$")}
 	if #results == 2 then
 		if not vars[results[1]] then
 			vars[results[1]] = num_vars
@@ -77,10 +88,26 @@ local function parse(expression)
 		commands.set(results[1])
 		return
 	end
-	results = {expression:match("^putn (.+)$")}
+	results = {expression:match("^%s*putn%s+(.+)$")}
 	if #results == 1 then
 		parse(results[1])
 		commands.call(0xffff)
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*%+%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.add()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*%-%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.sub()
+		stack_depth = stack_depth - 1
 		return
 	end
 	compile_error("\"%s\" is an invalid expression.", expression)
