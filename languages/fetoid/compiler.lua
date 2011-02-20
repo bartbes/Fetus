@@ -86,6 +86,22 @@ function commands.mod()
 	return addcode(0x10, 0x00, 0x00)
 end
 
+function commands.eq()
+	return addcode(0x11, 0x00, 0x00)
+end
+
+function commands.lt()
+	return addcode(0x12, 0x00, 0x00)
+end
+
+function commands.gt()
+	return addcode(0x13, 0x00, 0x00)
+end
+
+commands["not"] = function()
+	return addcode(0x14, 0x00, 0x00)
+end
+
 local function parse(expression)
 	if expression:match("^%s*%.%s*$") then
 		table.insert(code, line_ip, 0x00)
@@ -107,7 +123,7 @@ local function parse(expression)
 		return
 	end
 	results = {expression:match("^%s*(%w+)%s*=%s*(.+)%s*$")}
-	if #results == 2 then
+	if #results == 2 and not results[2]:match("^=") then
 		if not vars[results[1]] then
 			vars[results[1]] = num_vars
 			num_vars = num_vars + 1
@@ -120,6 +136,64 @@ local function parse(expression)
 	if #results == 1 then
 		parse(results[1])
 		commands.call(0xffff)
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*==%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.eq()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*!=%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.eq()
+		commands["not"]()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*>=%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.lt()
+		commands["not"]()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*<=%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.gt()
+		commands["not"]()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*>%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.gt()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*<%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.lt()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*!(.+)%s*$")}
+	if #results == 1 then
+		parse(results[1])
+		commands["not"]()
+		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*%-%s*(.+)%s*$")}
@@ -168,6 +242,9 @@ local function parse(expression)
 		parse(results[2])
 		commands.pow()
 		stack_depth = stack_depth - 1
+		return
+	end
+	if expression:match("^%s*$") then
 		return
 	end
 	compile_error("\"%s\" is an invalid expression.", expression)
