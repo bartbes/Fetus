@@ -16,12 +16,14 @@ end
 local input = arg[1] == "-" and io.stdin or io.open(arg[1], "r")
 if not input then
 	print(("Could not open input file \"%s\"."):format(arg[1]))
+	os.exit(1)
 end
 filename = arg[1] == "-" and stdin or arg[1]
 
 local output = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 if not output then
 	print(("Could not open output file \"%s\"."):format(arg[2]))
+	os.exit(1)
 end
 
 local vars = {}
