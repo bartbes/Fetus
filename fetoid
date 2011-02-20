@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ -z "$FETOID_C" ]; then
+	FETOID_C=./fetoid_c
+fi
+if [ ! -f "$FETOID_C" ]; then
+	echo "Can't find Fetoid compiler ($FETOID_C)"
+	exit 1
+fi
+if [ -z "$FETUS_VM" ]; then
+	FETUS_VM=./fetus_vm
+fi
+if [ ! -f "$FETUS_VM" ]; then
+	echo "Can't find Fetus VM ($FETUS_VM)"
+	exit 1
+fi
+
+while getopts ":Co:" opt; do
+	case $opt in
+		C)
+			COMPILE_ONLY=1
+			;;
+		o)
+			OUTPUT_NAME=$OPTARG
+			;;
+	esac
+	shift $((OPTIND-1))
+	OPTIND=$((OPTIND-1))
+done
+
+if [ $COMPILE_ONLY ]; then
+	$FETOID_C - $OUTPUT_NAME
+	exit 0
+fi
+
+$FETOID_C $1 - | $FETUS_VM - $2 $3 $4 $5 $6 $7 $8 $9

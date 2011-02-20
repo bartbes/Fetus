@@ -1,3 +1,5 @@
+#!/usr/bin/env lua
+
 if #arg < 2 then
 	print(("Usage: %s <input> <output>"):format(arg[0]))
 	os.exit(1)
@@ -11,13 +13,13 @@ function compile_error(err, ...)
 	os.exit(2)
 end
 
-local input = io.open(arg[1], "r")
+local input = arg[1] == "-" and io.stdin or io.open(arg[1], "r")
 if not input then
 	print(("Could not open input file \"%s\"."):format(arg[1]))
 end
-filename = arg[1]
+filename = arg[1] == "-" and stdin or arg[1]
 
-local output = io.open(arg[2], "w")
+local output = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 if not output then
 	print(("Could not open output file \"%s\"."):format(arg[2]))
 end
