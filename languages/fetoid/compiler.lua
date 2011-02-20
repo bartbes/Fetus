@@ -103,7 +103,7 @@ commands["not"] = function()
 	return addcode(0x14, 0x00, 0x00)
 end
 
-function commands.callfunc()
+function commands.yield()
 	return addcode(0x1a, 0x00, 0x00)
 end
 
@@ -271,10 +271,10 @@ local function parse(expression)
 		stack_depth = stack_depth - 1
 		return
 	end
-	results = {expression:match("^%s*call%s+(.+)%s*$")}
+	results = {expression:match("^%s*yield%s+(.+)%s*$")}
 	if #results == 1 then
 		parse(results[1])
-		commands.callfunc()
+		commands.yield()
 		return
 	end
 	if expression:match("^%s*$") then

@@ -2,4 +2,4 @@ function
 	putn 3
 endfunc
 test = .
-call test
+yield test
