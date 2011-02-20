@@ -28,6 +28,7 @@ local stack_depth = 0
 local code = {}
 local line_ip = 0
 local commands = {}
+local function_start = 0
 
 local function numtoarg(num)
 	return math.floor(num/256), num%256
@@ -102,12 +103,38 @@ commands["not"] = function()
 	return addcode(0x14, 0x00, 0x00)
 end
 
+function commands.callfunc()
+	return addcode(0x1a, 0x00, 0x00)
+end
+
 local function parse(expression)
 	if expression:match("^%s*%.%s*$") then
 		table.insert(code, line_ip, 0x00)
 		table.insert(code, line_ip, 0x00)
 		table.insert(code, line_ip, 0x02)
 		addcode(0x01, 0x00, 0x00)
+		return
+	end
+	if expression:match("^%s*function%s*$") then
+		function_start = #code+1
+		addcode(0x06, 0x00, 0x00)
+		stack_depth = 0
+		return
+	end
+	if expression:match("^%s*endfunc%s*$") then
+		local pos = #code/3+3
+		table.insert(code, function_start, pos%256)
+		table.insert(code, function_start, math.floor(pos/256))
+		table.insert(code, function_start, 0x08)
+		table.insert(code, function_start, 0x01)
+		table.insert(code, function_start, 0x00)
+		table.insert(code, function_start, 0x03)
+		local start = (function_start-1)/3+2
+		addcode(0x06, 0x00, 0x00,
+			0x03, math.floor(start/256), start%256,
+			0x03, math.floor(pos/256), pos%256,
+			0x05, 0x00, 0x0d)
+		stack_depth = 0
 		return
 	end
 	local results = {expression:match("^%s*(%d+)%s*$")}
@@ -242,6 +269,12 @@ local function parse(expression)
 		parse(results[2])
 		commands.pow()
 		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*call%s+(.+)%s*$")}
+	if #results == 1 then
+		parse(results[1])
+		commands.callfunc()
 		return
 	end
 	if expression:match("^%s*$") then
