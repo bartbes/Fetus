@@ -42,9 +42,8 @@ if not i then
 end
 local line = i:read(3)
 while line do
-	io.write(commandlist[string.byte(line:sub(1, 1))] .. " ")
-	io.write(string.format("%02x", string.byte(line:sub(2, 2))))
-	io.write(string.format("%02x", string.byte(line:sub(3, 3))) .. "\n")
+	local a, b, c = string.byte(line:sub(1, 1)), string.byte(line:sub(2, 2)), string.byte(line:sub(3, 3))
+	print(("%02x%02x%02x    %s %02x%02x"):format(a, b, c, commandlist[a] or "unknown", b, c))
 	line = i:read(3)
 end
 i:close()
