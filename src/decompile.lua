@@ -25,6 +25,8 @@ commandlist = {
 	[0x16] = "ascii",
 	[0x17] = "num",
 	[0x18] = "setp",
+	[0x19] = "ctxt",
+	[0x1a] = "ctxts",
 }
 
 if not arg then
