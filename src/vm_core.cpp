@@ -535,13 +535,13 @@ void commands(unsigned int command, unsigned int arg)
 			break;
 		case 0x12:			//lt
 			r = 0;
-			if (stack.pop() < stack.pop())
+			if (stack.pop() > stack.pop())
 				r = 1;
 			stack.push(r);
 			break;
 		case 0x13:			//gt
 			r = 0;
-			if (stack.pop() > stack.pop())
+			if (stack.pop() < stack.pop())
 				r = 1;
 			stack.push(r);
 			break;
