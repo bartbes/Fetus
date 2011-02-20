@@ -1,9 +1,14 @@
 first = 1
 second = 2
+third = 3
 function
 	putn first
 	yield 0
 endfunc
 test = .
+function
+	putn second
+	yield 0
+endfunc
 yield test
-putn second
+putn third

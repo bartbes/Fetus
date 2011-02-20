@@ -48,10 +48,12 @@ function commands.put(num)
 end
 
 function commands.get(var)
+	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
 	return addcode(0x01, numtoarg(vars[var]))
 end
 
 function commands.set(var)
+	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
 	return addcode(0x02, numtoarg(vars[var]))
 end
 
