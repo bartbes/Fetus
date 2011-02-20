@@ -1,5 +1,9 @@
+first = 1
+second = 2
 function
-	putn 3
+	putn first
+	yield 0
 endfunc
 test = .
 yield test
+putn second
