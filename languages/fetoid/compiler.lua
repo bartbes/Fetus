@@ -66,7 +66,24 @@ function commands.sub()
 	return addcode(0x0b, 0x00, 0x00)
 end
 
-local function parse_brackets(exp)
+function commands.mult()
+	return addcode(0x0c, 0x00, 0x00)
+end
+
+function commands.div()
+	return addcode(0x0d, 0x00, 0x00)
+end
+
+function commands.pow()
+	return addcode(0x0e, 0x00, 0x00)
+end
+
+function commands.root()
+	return addcode(0x0f, 0x00, 0x00)
+end
+
+function commands.mod()
+	return addcode(0x10, 0x00, 0x00)
 end
 
 local function parse(expression)
@@ -105,6 +122,14 @@ local function parse(expression)
 		commands.call(0xffff)
 		return
 	end
+	results = {expression:match("^%s*(.-)%s*%-%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.sub()
+		stack_depth = stack_depth - 1
+		return
+	end
 	results = {expression:match("^%s*(.-)%s*%+%s*(.+)%s*$")}
 	if #results == 2 then
 		parse(results[1])
@@ -113,11 +138,35 @@ local function parse(expression)
 		stack_depth = stack_depth - 1
 		return
 	end
-	results = {expression:match("^%s*(.-)%s*%-%s*(.+)%s*$")}
+	results = {expression:match("^%s*(.-)%s*%%%s*(.+)%s*$")}
 	if #results == 2 then
 		parse(results[1])
 		parse(results[2])
-		commands.sub()
+		commands.mod()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*/%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.div()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*%*%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.mult()
+		stack_depth = stack_depth - 1
+		return
+	end
+	results = {expression:match("^%s*(.-)%s*^%s*(.+)%s*$")}
+	if #results == 2 then
+		parse(results[1])
+		parse(results[2])
+		commands.pow()
 		stack_depth = stack_depth - 1
 		return
 	end
