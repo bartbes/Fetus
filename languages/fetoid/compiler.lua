@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
-if #arg < 2 then
-	print(("Usage: %s <input> <output>"):format(arg[0]))
+if #arg < 1 then
+	print(("Usage: %s <input> [output]"):format(arg[0]))
 	os.exit(1)
 end
 
@@ -20,6 +20,7 @@ if not input then
 end
 filename = arg[1] == "-" and stdin or arg[1]
 
+if not arg[2] then arg[2] = "a.ftsb" end
 local output = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 if not output then
 	print(("Could not open output file \"%s\"."):format(arg[2]))
@@ -128,7 +129,7 @@ local function parse(expression)
 		return
 	end
 	if expression:match("^%s*endfunc%s*$") then
-		local pos = #code/3+3
+		local pos = #code/3+5
 		table.insert(code, function_start, pos%256)
 		table.insert(code, function_start, math.floor(pos/256))
 		table.insert(code, function_start, 0x08)
@@ -137,6 +138,8 @@ local function parse(expression)
 		table.insert(code, function_start, 0x03)
 		local start = (function_start-1)/3+2
 		addcode(0x06, 0x00, 0x00,
+			0x03, 0x00, 0x01,
+			0x08, 0x00, 0x00,
 			0x03, math.floor(start/256), start%256,
 			0x03, math.floor(pos/256), pos%256,
 			0x05, 0x00, 0x0d)

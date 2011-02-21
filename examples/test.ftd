@@ -11,4 +11,5 @@ function
 	yield 0
 endfunc
 yield test
+yield test
 putn third

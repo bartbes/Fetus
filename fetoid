@@ -29,7 +29,7 @@ while getopts ":Co:" opt; do
 done
 
 if [ $COMPILE_ONLY ]; then
-	$FETOID_C - $OUTPUT_NAME
+	$FETOID_C $1 $OUTPUT_NAME
 	exit 0
 fi
 
