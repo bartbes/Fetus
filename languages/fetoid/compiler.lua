@@ -34,6 +34,8 @@ local code = {}
 local line_ip = 0
 local commands = {}
 local function_start = 0
+local ifs = {}
+local whiles = {}
 
 local function numtoarg(num)
 	return math.floor(num/256), num%256
@@ -143,6 +145,36 @@ local function parse(expression)
 			0x03, math.floor(start/256), start%256,
 			0x03, math.floor(pos/256), pos%256,
 			0x05, 0x00, 0x0d)
+		stack_depth = 0
+		return
+	end
+	local results = {expression:match("^%s*if%s+(.-)%s*$")}
+	if #results == 1 then
+		parse(results[1])
+		table.insert(ifs, #code+1)
+		stack_depth = 0
+		return
+	end
+	if expression:match("^%s*endif%s*$") then
+		local pos = #code/3+2
+		local start = table.remove(ifs)
+		table.insert(code, start, pos%256)
+		table.insert(code, start, math.floor(pos/256))
+		table.insert(code, start, 0x08)
+		table.insert(code, start, 0x00)
+		table.insert(code, start, 0x00)
+		table.insert(code, start, 0x14)
+		return
+	end
+	if expression:match("^%s*do%s*$") then
+		table.insert(whiles, #code+1)
+		return
+	end
+	local results = {expression:match("^%s*while%s+(.-)%s*$")}
+	if #results == 1 then
+		local start = table.remove(whiles)/3
+		parse(results[1])
+		addcode(0x08, math.floor(start/256), start%256)
 		stack_depth = 0
 		return
 	end
