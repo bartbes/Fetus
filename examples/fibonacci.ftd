@@ -1,0 +1,24 @@
+first = 1
+second = 1
+temp = 0
+
+function
+	temp = second
+	second = first + second
+	first = temp
+	yield 0
+endfunc
+fibonacci = .
+
+counter = 2
+max = 20
+
+putn first
+putn second
+
+do
+	yield fibonacci
+	putn second
+	counter = counter + 1
+while counter < max
+
