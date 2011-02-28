@@ -1,4 +1,4 @@
-first = 1
+first = 0
 second = 1
 temp = 0
 
@@ -10,7 +10,7 @@ function
 endfunc
 fibonacci = .
 
-counter = 2
+counter = 1
 max = 20
 
 putn first
