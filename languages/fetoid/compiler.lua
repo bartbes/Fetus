@@ -36,6 +36,7 @@ local commands = {}
 local function_start = 0
 local ifs = {}
 local whiles = {}
+local dowhiles = {}
 
 local function numtoarg(num)
 	return math.floor(num/256), num%256
@@ -151,13 +152,38 @@ local function parse(expression)
 	local results = {expression:match("^%s*if%s+(.-)%s*$")}
 	if #results == 1 then
 		parse(results[1])
-		table.insert(ifs, #code+1)
+		table.insert(ifs, {#code+1})
 		stack_depth = 0
 		return
 	end
 	if expression:match("^%s*endif%s*$") then
 		local pos = #code/3+2
+		local start = ifs[#ifs]
+		if not start then
+			compile_error("endif without matching starting if.")
+		end
+		if start[2] then
+			compile_error("Two else statements for one if.")
+		end
+		start[2] = true
+		start = start[1]
+		table.insert(code, start, pos%256)
+		table.insert(code, start, math.floor(pos/256))
+		table.insert(code, start, 0x08)
+		table.insert(code, start, 0x00)
+		table.insert(code, start, 0x00)
+		table.insert(code, start, 0x14)
+		return
+
+	end
+	if expression:match("^%s*endif%s*$") then
+		local pos = #code/3+2
 		local start = table.remove(ifs)
+		if not start then
+			compile_error("endif without matching starting if.")
+		end
+		if start[2] then return end
+		start = start[1]
 		table.insert(code, start, pos%256)
 		table.insert(code, start, math.floor(pos/256))
 		table.insert(code, start, 0x08)
@@ -167,14 +193,43 @@ local function parse(expression)
 		return
 	end
 	if expression:match("^%s*do%s*$") then
-		table.insert(whiles, #code+1)
+		table.insert(dowhiles, #code+1)
+		return
+	end
+	local results = {expression:match("^%s*dowhile%s+(.-)%s*$")}
+	if #results == 1 then
+		local start = table.remove(dowhiles)
+		if not start then
+			compile_error("dowhile without matching starting do")
+		end
+		start = start/3
+		parse(results[1])
+		addcode(0x08, math.floor(start/256), start%256)
+		stack_depth = 0
 		return
 	end
 	local results = {expression:match("^%s*while%s+(.-)%s*$")}
 	if #results == 1 then
-		local start = table.remove(whiles)/3
-		parse(results[1])
-		addcode(0x08, math.floor(start/256), start%256)
+		table.insert(whiles, {#code+1, results[1]})
+		stack_depth = 0
+		return
+	end
+	if expression:match("^%s*endwhile%s*$") then
+		local start = table.remove(whiles)
+		if not start then
+			compile_error("endwhile without matching starting while")
+		end
+		startpos = start[1]/3 + 2
+		local pos = (#code+1)/3+2
+		parse(start[2])
+		addcode(0x08, math.floor(startpos/256), startpos%256)
+		startpos = start[1]
+		table.insert(code, startpos, pos%256)
+		table.insert(code, startpos, math.floor(pos/256))
+		table.insert(code, startpos, 0x08)
+		table.insert(code, startpos, 0x01)
+		table.insert(code, startpos, 0x00)
+		table.insert(code, startpos, 0x03)
 		stack_depth = 0
 		return
 	end
