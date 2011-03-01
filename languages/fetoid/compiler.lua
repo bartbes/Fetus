@@ -38,6 +38,8 @@ local ifs = {}
 local whiles = {}
 local dowhiles = {}
 
+local parse
+
 local function numtoarg(num)
 	return math.floor(num/256), num%256
 end
@@ -55,14 +57,36 @@ function commands.put(num)
 	return addcode(0x03, numtoarg(num))
 end
 
-function commands.get(var, off)
+function commands.get(var)
 	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
-	return addcode(0x01, numtoarg(vars[var]+(off or 0)))
+	return addcode(0x01, numtoarg(vars[var]))
 end
 
-function commands.set(var, off)
+function commands.get_array(var, offset)
 	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
-	return addcode(0x02, numtoarg(vars[var]+(off or 0)))
+	parse(offset)
+	local a, b = numtoarg(vars[var])
+	return addcode(0x03, a, b,
+		0x0a, 0x00, 0x00,
+		0x07, 0x00, 0x00)
+end
+
+function commands.set(var)
+	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
+	return addcode(0x02, numtoarg(vars[var]))
+end
+
+function commands.set_array(var, offset)
+	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
+	addcode(0x02, 0x00, 0x00)
+	parse(offset)
+	local a, b = numtoarg(vars[var])
+	return addcode(
+		0x03, a, b,
+		0x0a, 0x00, 0x00,
+		0x01, 0x00, 0x00,
+		0x18, 0x00, 0x00
+		)
 end
 
 function commands.call(func)
@@ -117,7 +141,7 @@ function commands.yield()
 	return addcode(0x1a, 0x00, 0x00)
 end
 
-local function parse(expression)
+parse = function(expression)
 	--remove comments
 	expression = expression:gsub(";.*$", "")
 	--now let's parse it
@@ -248,9 +272,9 @@ local function parse(expression)
 		stack_depth = stack_depth + 1
 		return
 	end
-	results = {expression:match("^%s*(%w+)%[(%d+)%]%s*$")}
+	results = {expression:match("^%s*(%w+)%[(.+)%]%s*$")}
 	if #results == 2 then
-		commands.get(results[1], results[2])
+		commands.get_array(results[1], results[2])
 		stack_depth = stack_depth + 1
 		return
 	end
@@ -284,15 +308,17 @@ local function parse(expression)
 		end
 		parse(results[2])
 		commands.set(results[1])
+		stack_depth = stack_depth + 1
 		return
 	end
-	results = {expression:match("^%s*(%w+)%[(%d+)%]%s*=%s*(.+)%s*$")}
+	results = {expression:match("^%s*(%w+)%[(.+)%]%s*=%s*(.+)%s*$")}
 	if #results == 3 and not results[3]:match("^=") then
 		if not vars[results[1]] then
 			compile_error("Trying to index non-declared array %s.", results[1])
 		end
 		parse(results[3])
-		commands.set(results[1], results[2])
+		commands.set_array(results[1], results[2])
+		stack_depth = stack_depth + 2
 		return
 	end
 	results = {expression:match("^%s*putn%s+(.+)$")}

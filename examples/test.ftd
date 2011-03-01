@@ -7,8 +7,11 @@ myarray[0] = 1
 myarray[1] = 2
 myarray[2] = 3
 
-putn myarray[0]
-putn myarray[1]
-putn myarray[2]
+counter = 0
+
+while counter < 3
+	putn myarray[counter]
+	counter = counter + 1
+endwhile
 putn a
 putn b
