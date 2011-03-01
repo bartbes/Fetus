@@ -1,15 +1,5 @@
-first = 1
-second = 2
-third = 3
-function
-	putn first
-	yield 0
-endfunc
-test = .
-function
-	putn second
-	yield 0
-endfunc
-yield test
-yield test
-putn third
+declare myarray[3]
+declare a
+b = 1
+
+putn b==5 ;test if it is 5 (it isn't, but when decompiled you'll see 'b' is at memory address 5

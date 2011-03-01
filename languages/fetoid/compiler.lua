@@ -118,6 +118,9 @@ function commands.yield()
 end
 
 local function parse(expression)
+	--remove comments
+	expression = expression:gsub(";.*$", "")
+	--now let's parse it
 	if expression:match("^%s*%.%s*$") then
 		table.insert(code, line_ip, 0x00)
 		table.insert(code, line_ip, 0x00)
