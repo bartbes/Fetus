@@ -245,6 +245,28 @@ local function parse(expression)
 		stack_depth = stack_depth + 1
 		return
 	end
+	results = {expression:match("^%s*declare%s+([%w%[%d%]]+)%s*$")}
+	if #results == 1 then
+		local var = results[1]
+		local length = var:match("%[(%d+)%]$")
+		if length then
+			var = var:sub(1, -(#length+3))
+			length = tonumber(length)
+		else
+			length = 1
+		end
+		if var:match("^%w+$") then
+			if not vars[var] then
+				vars[var] = num_vars
+				num_vars = num_vars + length
+			else
+				compile_error("Variable %s already exists.", var)
+			end
+		else
+			compile_error("Invalid variable name %s.", var)
+		end
+		return
+	end
 	results = {expression:match("^%s*(%w+)%s*=%s*(.+)%s*$")}
 	if #results == 2 and not results[2]:match("^=") then
 		if not vars[results[1]] then
