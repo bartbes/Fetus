@@ -1,5 +1,14 @@
 declare myarray[3]
 declare a
-b = 1
+a = 4
+b = 5
 
-putn b==5 ;test if it is 5 (it isn't, but when decompiled you'll see 'b' is at memory address 5
+myarray[0] = 1
+myarray[1] = 2
+myarray[2] = 3
+
+putn myarray[0]
+putn myarray[1]
+putn myarray[2]
+putn a
+putn b

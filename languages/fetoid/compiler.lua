@@ -55,14 +55,14 @@ function commands.put(num)
 	return addcode(0x03, numtoarg(num))
 end
 
-function commands.get(var)
+function commands.get(var, off)
 	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
-	return addcode(0x01, numtoarg(vars[var]))
+	return addcode(0x01, numtoarg(vars[var]+(off or 0)))
 end
 
-function commands.set(var)
+function commands.set(var, off)
 	if not vars[var] then compile_error("Variable '%s' doesn't exist.", var) end
-	return addcode(0x02, numtoarg(vars[var]))
+	return addcode(0x02, numtoarg(vars[var]+(off or 0)))
 end
 
 function commands.call(func)
@@ -248,6 +248,12 @@ local function parse(expression)
 		stack_depth = stack_depth + 1
 		return
 	end
+	results = {expression:match("^%s*(%w+)%[(%d+)%]%s*$")}
+	if #results == 2 then
+		commands.get(results[1], results[2])
+		stack_depth = stack_depth + 1
+		return
+	end
 	results = {expression:match("^%s*declare%s+([%w%[%d%]]+)%s*$")}
 	if #results == 1 then
 		local var = results[1]
@@ -278,6 +284,15 @@ local function parse(expression)
 		end
 		parse(results[2])
 		commands.set(results[1])
+		return
+	end
+	results = {expression:match("^%s*(%w+)%[(%d+)%]%s*=%s*(.+)%s*$")}
+	if #results == 3 and not results[3]:match("^=") then
+		if not vars[results[1]] then
+			compile_error("Trying to index non-declared array %s.", results[1])
+		end
+		parse(results[3])
+		commands.set(results[1], results[2])
 		return
 	end
 	results = {expression:match("^%s*putn%s+(.+)$")}
