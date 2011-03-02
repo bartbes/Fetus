@@ -285,6 +285,14 @@ parse = function(expression)
 		commands.get_array(results[1], results[2])
 		return
 	end
+	results = {expression:match("^%s*&(%w+)%s*$")}
+	if #results == 1 then
+		if not vars[results[1]] then
+			compile_error("Getting address of invalid variable %s.", results[1])
+		end
+		commands.put(vars[results[1]])
+		return
+	end
 	results = {expression:match("^%s*\"(.+)\"%s*$")}
 	if #results == 1 then
 		local str = results[1]:gsub("\\.", escapechars)
@@ -348,6 +356,14 @@ parse = function(expression)
 		parse(results[1])
 		commands.call(0x000f)
 		commands.call(0x0001)
+		return
+	end
+	results = {expression:match("^%s*gets%s+(.+),(.+)$")}
+	if #results == 2 then
+		commands.clear()
+		parse(results[1])
+		parse(results[2])
+		commands.call(0x0002)
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*==%s*(.+)%s*$")}

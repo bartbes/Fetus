@@ -1,0 +1,5 @@
+declare name[32]
+puts "Enter your name: "
+gets &name,31
+puts "Hi, "
+puts &name
