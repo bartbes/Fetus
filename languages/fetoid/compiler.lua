@@ -29,7 +29,6 @@ end
 
 local vars = {}
 local num_vars = 1
-local stack_depth = 0
 local code = {}
 local line_ip = 0
 local commands = {}
@@ -155,7 +154,6 @@ parse = function(expression)
 	if expression:match("^%s*function%s*$") then
 		function_start = #code+1
 		addcode(0x06, 0x00, 0x00)
-		stack_depth = 0
 		return
 	end
 	if expression:match("^%s*endfunc%s*$") then
@@ -173,14 +171,12 @@ parse = function(expression)
 			0x03, math.floor(start/256), start%256,
 			0x03, math.floor(pos/256), pos%256,
 			0x05, 0x00, 0x0d)
-		stack_depth = 0
 		return
 	end
 	local results = {expression:match("^%s*if%s+(.-)%s*$")}
 	if #results == 1 then
 		parse(results[1])
 		table.insert(ifs, {#code+1})
-		stack_depth = 0
 		return
 	end
 	if expression:match("^%s*endif%s*$") then
@@ -232,13 +228,11 @@ parse = function(expression)
 		start = start/3
 		parse(results[1])
 		addcode(0x08, math.floor(start/256), start%256)
-		stack_depth = 0
 		return
 	end
 	local results = {expression:match("^%s*while%s+(.-)%s*$")}
 	if #results == 1 then
 		table.insert(whiles, {#code+1, results[1]})
-		stack_depth = 0
 		return
 	end
 	if expression:match("^%s*endwhile%s*$") then
@@ -257,25 +251,21 @@ parse = function(expression)
 		table.insert(code, startpos, 0x01)
 		table.insert(code, startpos, 0x00)
 		table.insert(code, startpos, 0x03)
-		stack_depth = 0
 		return
 	end
 	local results = {expression:match("^%s*(%d+)%s*$")}
 	if #results == 1 then
 		commands.put(results[1])
-		stack_depth = stack_depth + 1
 		return
 	end
 	results = {expression:match("^%s*(%w+)%s*$")}
 	if #results == 1 then
 		commands.get(results[1])
-		stack_depth = stack_depth + 1
 		return
 	end
 	results = {expression:match("^%s*(%w+)%[(.+)%]%s*$")}
 	if #results == 2 then
 		commands.get_array(results[1], results[2])
-		stack_depth = stack_depth + 1
 		return
 	end
 	results = {expression:match("^%s*declare%s+([%w%[%d%]]+)%s*$")}
@@ -308,7 +298,6 @@ parse = function(expression)
 		end
 		parse(results[2])
 		commands.set(results[1])
-		stack_depth = stack_depth + 1
 		return
 	end
 	results = {expression:match("^%s*(%w+)%[(.+)%]%s*=%s*(.+)%s*$")}
@@ -318,7 +307,6 @@ parse = function(expression)
 		end
 		parse(results[3])
 		commands.set_array(results[1], results[2])
-		stack_depth = stack_depth + 2
 		return
 	end
 	results = {expression:match("^%s*putn%s+(.+)$")}
@@ -332,7 +320,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.eq()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*!=%s*(.+)%s*$")}
@@ -341,7 +328,6 @@ parse = function(expression)
 		parse(results[2])
 		commands.eq()
 		commands["not"]()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*>=%s*(.+)%s*$")}
@@ -350,7 +336,6 @@ parse = function(expression)
 		parse(results[2])
 		commands.lt()
 		commands["not"]()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*<=%s*(.+)%s*$")}
@@ -359,7 +344,6 @@ parse = function(expression)
 		parse(results[2])
 		commands.gt()
 		commands["not"]()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*>%s*(.+)%s*$")}
@@ -367,7 +351,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.gt()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*<%s*(.+)%s*$")}
@@ -375,14 +358,12 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.lt()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*!(.+)%s*$")}
 	if #results == 1 then
 		parse(results[1])
 		commands["not"]()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*%-%s*(.+)%s*$")}
@@ -390,7 +371,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.sub()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*%+%s*(.+)%s*$")}
@@ -398,7 +378,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.add()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*%%%s*(.+)%s*$")}
@@ -406,7 +385,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.mod()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*/%s*(.+)%s*$")}
@@ -414,7 +392,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.div()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*%*%s*(.+)%s*$")}
@@ -422,7 +399,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.mult()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*^%s*(.+)%s*$")}
@@ -430,7 +406,6 @@ parse = function(expression)
 		parse(results[1])
 		parse(results[2])
 		commands.pow()
-		stack_depth = stack_depth - 1
 		return
 	end
 	results = {expression:match("^%s*yield%s+(.+)%s*$")}
