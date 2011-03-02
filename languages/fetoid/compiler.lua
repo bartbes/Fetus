@@ -329,6 +329,13 @@ parse = function(expression)
 		commands.call(0xffff)
 		return
 	end
+	results = {expression:match("^%s*puts%s+(.+)$")}
+	if #results == 1 then
+		parse(results[1])
+		commands.call(0x000f)
+		commands.call(0x0001)
+		return
+	end
 	results = {expression:match("^%s*(.-)%s*==%s*(.+)%s*$")}
 	if #results == 2 then
 		parse(results[1])
