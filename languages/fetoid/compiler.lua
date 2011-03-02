@@ -272,7 +272,7 @@ parse = function(expression)
 		commands.get_array(results[1], results[2])
 		return
 	end
-	results = {expression:match("^%s*\".+\"%s*$")}
+	results = {expression:match("^%s*\"(.+)\"%s*$")}
 	if #results == 1 then
 		local str = results[1]
 		if not strings[str] then
