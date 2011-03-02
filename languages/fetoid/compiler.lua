@@ -478,8 +478,10 @@ for line in input:lines() do
 end
 
 local endpos = #code+1
+local hasliterals = false
 
 for i, v in pairs(strings) do
+	hasliterals = true
 	strings[i] = num_vars
 	num_vars = num_vars + #i + 1
 	addcode(
@@ -497,23 +499,27 @@ for i, v in pairs(strings) do
 	end
 end
 
-addcode(
-	0x03, 0x00, 0x01,
-	0x08, 0x00, 0x02
-	)
-
-local programend = #code/3+2
-
-table.insert(code, endpos, programend%256)
-table.insert(code, endpos, math.floor(programend/256))
-table.insert(code, endpos, 0x08)
-table.insert(code, endpos, 0x01)
-table.insert(code, endpos, 0x00)
-table.insert(code, endpos, 0x03)
-
-endpos = endpos/3+2
-code[5] = math.floor(endpos/256)
-code[6] = endpos%256
+if hasliterals then
+	addcode(
+		0x03, 0x00, 0x01,
+		0x08, 0x00, 0x02
+		)
+	
+	local programend = #code/3+2
+	
+	table.insert(code, endpos, programend%256)
+	table.insert(code, endpos, math.floor(programend/256))
+	table.insert(code, endpos, 0x08)
+	table.insert(code, endpos, 0x01)
+	table.insert(code, endpos, 0x00)
+	table.insert(code, endpos, 0x03)
+	
+	endpos = endpos/3+2
+	code[5] = math.floor(endpos/256)
+	code[6] = endpos%256
+else
+	code[6] = 0x02
+end
 
 for i, v in ipairs(code) do
 	code[i] = string.char(v)
