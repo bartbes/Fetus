@@ -144,6 +144,10 @@ function commands.yield()
 	return addcode(0x1a, 0x00, 0x00)
 end
 
+function commands.clear()
+	return addcode(0x06, 0x00, 0x00)
+end
+
 parse = function(expression)
 	--remove comments
 	expression = expression:gsub(";.*$", "")
@@ -331,6 +335,7 @@ parse = function(expression)
 	end
 	results = {expression:match("^%s*puts%s+(.+)$")}
 	if #results == 1 then
+		commands.clear()
 		parse(results[1])
 		commands.call(0x000f)
 		commands.call(0x0001)
