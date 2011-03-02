@@ -29,13 +29,17 @@ end
 
 local vars = {}
 local num_vars = 1
-local code = {}
+local code = {
+	0x03, 0x00, 0x01,
+	0x08, 0x00, 0x00
+}
 local line_ip = 0
 local commands = {}
 local function_start = 0
 local ifs = {}
 local whiles = {}
 local dowhiles = {}
+local strings = {}
 
 local parse
 
@@ -268,6 +272,16 @@ parse = function(expression)
 		commands.get_array(results[1], results[2])
 		return
 	end
+	results = {expression:match("^%s*\".+\"%s*$")}
+	if #results == 1 then
+		local str = results[1]
+		if not strings[str] then
+			strings[str] = {}
+		end
+		table.insert(strings[str], #code+1)
+		addcode(0x03, 0x00, 0x00)
+		return
+	end
 	results = {expression:match("^%s*declare%s+([%w%[%d%]]+)%s*$")}
 	if #results == 1 then
 		local var = results[1]
@@ -425,6 +439,44 @@ for line in input:lines() do
 	parse(line)
 	line_ip = #code+1
 end
+
+local endpos = #code+1
+
+for i, v in pairs(strings) do
+	strings[i] = num_vars
+	num_vars = num_vars + #i + 1
+	addcode(
+		0x06, 0x00, 0x00,
+		0x03, numtoarg(strings[i])
+	)
+	for c in i:gmatch(".") do
+		addcode(0x03, numtoarg(c:byte()))
+	end
+	addcode(0x03, 0x00, 0x00,
+		0x05, 0x00, 0x0e)
+	for _, p in ipairs(v) do
+		code[p+1] = math.floor(strings[i]/256)
+		code[p+2] = strings[i]%256
+	end
+end
+
+addcode(
+	0x03, 0x00, 0x01,
+	0x08, 0x00, 0x02
+	)
+
+local programend = #code/3+2
+
+table.insert(code, endpos, programend%256)
+table.insert(code, endpos, math.floor(programend/256))
+table.insert(code, endpos, 0x08)
+table.insert(code, endpos, 0x01)
+table.insert(code, endpos, 0x00)
+table.insert(code, endpos, 0x03)
+
+endpos = endpos/3+2
+code[5] = math.floor(endpos/256)
+code[6] = endpos%256
 
 for i, v in ipairs(code) do
 	code[i] = string.char(v)
