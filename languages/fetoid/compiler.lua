@@ -41,6 +41,15 @@ local whiles = {}
 local dowhiles = {}
 local strings = {}
 
+local escapechars = {
+	["\\n"] = "\n",
+	["\\r"] = "\r",
+	["\\\""] = "\"",
+	["\\\\"]= "\\",
+	["\\t"] = "\t",
+	["\\b"] = "\b",
+}
+
 local parse
 
 local function numtoarg(num)
@@ -278,7 +287,7 @@ parse = function(expression)
 	end
 	results = {expression:match("^%s*\"(.+)\"%s*$")}
 	if #results == 1 then
-		local str = results[1]
+		local str = results[1]:gsub("\\.", escapechars)
 		if not strings[str] then
 			strings[str] = {}
 		end
