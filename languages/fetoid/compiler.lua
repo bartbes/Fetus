@@ -344,13 +344,22 @@ parse = function(expression)
 		commands.set_array(results[1], results[2])
 		return
 	end
-	results = {expression:match("^%s*putn%s+(.+)$")}
+	results = {expression:match("^%s*putn%s+(.+)%s*$")}
 	if #results == 1 then
 		parse(results[1])
 		commands.call(0xffff)
 		return
 	end
-	results = {expression:match("^%s*puts%s+(.+)$")}
+	results = {expression:match("^%s*puts%s+(.-),(.+)%s*$")}
+	if #results == 2 then
+		commands.clear()
+		parse(results[1])
+		parse(results[2])
+		commands.call(0x000f)
+		commands.call(0x0006)
+		return
+	end
+	results = {expression:match("^%s*puts%s+(.+)%s*$")}
 	if #results == 1 then
 		commands.clear()
 		parse(results[1])
@@ -358,12 +367,36 @@ parse = function(expression)
 		commands.call(0x0001)
 		return
 	end
-	results = {expression:match("^%s*gets%s+(.+),(.+)$")}
+	results = {expression:match("^%s*gets%s+(.-),(.-),(.+)%s*$")}
+	if #results == 3 then
+		commands.clear()
+		parse(results[1])
+		parse(results[2])
+		parse(results[3])
+		commands.call(0x0005)
+		return
+	end
+	results = {expression:match("^%s*gets%s+(.-),(.+)%s*$")}
 	if #results == 2 then
 		commands.clear()
 		parse(results[1])
 		parse(results[2])
 		commands.call(0x0002)
+		return
+	end
+	results = {expression:match("^%s*fopen%s+(.+),(.+)%s*$")}
+	if #results == 2 then
+		commands.clear()
+		parse(results[1])
+		commands.call(0x000f)
+		parse(results[2])
+		commands.call(0x0003)
+		return
+	end
+	results = {expression:match("^%s*fclose%s*(.+)%s*$")}
+	if #results == 1 then
+		parse(results[1])
+		commands.call(0x0004)
 		return
 	end
 	results = {expression:match("^%s*(.-)%s*==%s*(.+)%s*$")}

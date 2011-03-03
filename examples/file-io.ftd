@@ -1,0 +1,9 @@
+declare str[17]
+f = fopen "test.txt",2
+puts f,"Yumm, apple pie!"
+fclose f
+f = fopen "test.txt",1
+gets f,&str,17
+puts &str
+puts "\n"
+fclose f
