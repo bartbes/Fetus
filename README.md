@@ -31,12 +31,12 @@ A simple brainfuck compiler is included, it *should* all work, but it has not be
 ###Executables###
 On first run, 'make all' should be executed to compile the VM, and the tools for the supported languages.
 
-brainfuck - A script that compiles and runs a Brainfuck program.
-brainfuck_c - The Brainfuck compiler.
-fetoid - A script that compiles and runs a Fetoid program.
-fetoid_c - The Fetoid compiler.
-fetus - A script that preprocesses, compiles and runs a Fetus language program.
-fetus_c - The Fetus language compiler.
-fetus_pp - The Fetus language preprocessor.
-fetus_vm - The Fetus VM
+* brainfuck - A script that compiles and runs a Brainfuck program.
+* brainfuck_c - The Brainfuck compiler.
+* fetoid - A script that compiles and runs a Fetoid program.
+* fetoid_c - The Fetoid compiler.
+* fetus - A script that preprocesses, compiles and runs a Fetus language program.
+* fetus_c - The Fetus language compiler.
+* fetus_pp - The Fetus language preprocessor.
+* fetus_vm - The Fetus VM.
 
