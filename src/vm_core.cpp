@@ -237,10 +237,10 @@ void functions(unsigned int function)
 			p = stack[0];
 			s = stack[1];
 			stack.clear();
-			buffer = new char[s+1];
-			memset(buffer, 0, s+1);
+			buffer = new char[s];
+			memset(buffer, 0, s);
 			if (cin.good())
-				cin.read(buffer, s);
+				cin.read(buffer, s-1);
 			insertmem(p, buffer);
 			delete[] buffer;
 			break;
