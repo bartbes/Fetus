@@ -393,7 +393,16 @@ parse = function(expression)
 		commands.call(0x0003)
 		return
 	end
-	results = {expression:match("^%s*fclose%s*(.+)%s*$")}
+	results = {expression:match("^%s*tcpopen%s+(.+),(.+)%s*$")}
+	if #results == 2 then
+		commands.clear()
+		parse(results[1])
+		commands.call(0x000f)
+		parse(results[2])
+		commands.call(0x0007)
+		return
+	end
+	results = {expression:match("^%s*close%s*(.+)%s*$")}
 	if #results == 1 then
 		parse(results[1])
 		commands.call(0x0004)

@@ -1,0 +1,7 @@
+declare buffer[32]
+
+sock = tcpopen "127.0.0.1",5432
+puts sock,"OHAI"
+gets sock,&buffer,32
+puts sock,&buffer
+close sock
