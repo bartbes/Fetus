@@ -294,22 +294,23 @@ void functions(unsigned int function)
 			file = handles.get(id);
 			if (!file.open)
 				return;
-			buffer = new char[s+1];
-			memset(buffer, 0, s+1);
+			buffer = new char[s];
+			memset(buffer, 0, s);
 			switch (file.t)
 			{
 				case 0:
-					fread(buffer, 1, s, file.file);
+					s = fread(buffer, 1, s-1, file.file);
 					buffer[s] = 0;
 					insertmem(p, buffer);
 					break;
 				case 1:
 				case 2:
-					recv(file.sock, buffer, s, 0);
+					s = recv(file.sock, buffer, s, 0);
 					buffer[s] = 0;
 					insertmem(p, buffer);
 					break;
 			}
+			stack.push(s);
 			delete[] buffer;
 			break;
 		case 0x0006:		//write
