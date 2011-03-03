@@ -1,5 +1,8 @@
 declare name[32]
 puts "Enter your name: "
 gets &name,31
+length = .
+name[length-1] = 0
 puts "Hi, "
 puts &name
+puts "!\n"

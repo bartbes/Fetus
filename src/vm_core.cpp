@@ -242,6 +242,7 @@ void functions(unsigned int function)
 			if (cin.good())
 				cin.read(buffer, s-1);
 			insertmem(p, buffer);
+			stack.push(cin.gcount());
 			delete[] buffer;
 			break;
 		case 0x0003:		//fileopen
