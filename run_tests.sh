@@ -13,13 +13,16 @@ files="$example_files $test_files"
 
 for file in $files; do
 	log "Running file: $file"
-	extension=`echo $file | sed 's/.*\.\(ft[sd]\)/\1/'`
+	extension=`echo $file | sed 's/.*\.\(.*\)/\1/'`
 	case $extension in
 		fts)
 			./fetus $file
 			;;
 		ftd)
 			./fetoid $file
+			;;
+		bf|b)
+			./brainfuck $file
 			;;
 		*)
 			log "Don't recognize extension $extension"

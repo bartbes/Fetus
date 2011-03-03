@@ -1,7 +1,21 @@
 #!/usr/bin/env lua
 
-local input = io.open(arg[1], "r")
-local output = io.open(arg[2], "w")
+if #arg < 1 then
+	print(("Usage: %s <input> [output]"):format(arg[0]))
+	os.exit(1)
+end
+
+local input = arg[1] == "-" and io.stdin or io.open(arg[1], "r")
+if not input then
+	print(("Could not open input file \"%s\"."):format(arg[1]))
+	os.exit(1)
+end
+if not arg[2] then arg[2] = "a.ftsb" end
+local output = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
+if not output then
+	print(("Could not open output file \"%s\"."):format(arg[2]))
+	os.exit(1)
+end
 
 local posses = {}
 

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ -z "$BRAINFUCK_C" ]; then
+	BRAINFUCK_C=./brainfuck_c
+fi
+if [ ! -f "$BRAINFUCK_C" ]; then
+	echo "Can't find Brainfuck compiler ($BRAINFUCK_C)"
+	exit 1
+fi
+if [ -z "$FETUS_VM" ]; then
+	FETUS_VM=./fetus_vm
+fi
+if [ ! -f "$FETUS_VM" ]; then
+	echo "Can't find Fetus VM ($FETUS_VM)"
+	exit 1
+fi
+
+while getopts ":Co:" opt; do
+	case $opt in
+		C)
+			COMPILE_ONLY=1
+			;;
+		o)
+			OUTPUT_NAME=$OPTARG
+			;;
+	esac
+	shift $((OPTIND-1))
+	OPTIND=$((OPTIND-1))
+done
+
+if [ $COMPILE_ONLY ]; then
+	$BRAINFUCK_C $1 $OUTPUT_NAME
+	exit 0
+fi
+
+$BRAINFUCK_C $1 - | $FETUS_VM - $2 $3 $4 $5 $6 $7 $8 $9
