@@ -2,7 +2,16 @@ CXX=g++
 CP=cp -r
 RM=rm -rIf
 
-all: fetus_pp fetus_c fetus_vm fetoid_c brainfuck_c
+all: fetus_pp fetus_c fetus_vm fetus fetoid_c fetoid brainfuck_c brainfuck
+
+fetus: scripts/fetus
+	$(CP) $^ $@
+
+fetoid: scripts/fetoid
+	$(CP) $^ $@
+
+brainfuck: scripts/brainfuck
+	$(CP) $^ $@
 
 fetus_vm: src/vm.cpp src/vm_core.cpp
 	$(CXX) -o $@ $^
@@ -20,7 +29,7 @@ brainfuck_c: languages/brainfuck/compiler.lua
 	$(CP) $^ $@
 
 clean:
-	$(RM) fetus_vm fetus_c fetus_pp fetoid_c brainfuck_c
+	$(RM) fetus_vm fetus_c fetus_pp fetus fetoid_c fetoid brainfuck_c brainfuck
 
 %: src/vm_core.cpp %.ftsb
 	src/standalone $@.ftsb $@.cpp
