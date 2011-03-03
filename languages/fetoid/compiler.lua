@@ -18,7 +18,7 @@ if not input then
 	print(("Could not open input file \"%s\"."):format(arg[1]))
 	os.exit(1)
 end
-filename = arg[1] == "-" and stdin or arg[1]
+filename = arg[1] == "-" and "stdin" or arg[1]
 
 if not arg[2] then arg[2] = "a.ftsb" end
 local output = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
