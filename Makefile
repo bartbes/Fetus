@@ -20,7 +20,7 @@ brainfuck_c: languages/brainfuck/compiler.lua
 	$(CP) $^ $@
 
 clean:
-	$(RM) fetus_vm fetus_c fetus_pp
+	$(RM) fetus_vm fetus_c fetus_pp fetoid_c brainfuck_c
 
 %: src/vm_core.cpp %.ftsb
 	src/standalone $@.ftsb $@.cpp
