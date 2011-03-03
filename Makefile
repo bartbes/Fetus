@@ -2,16 +2,16 @@ CXX=g++
 CP=cp -r
 RM=rm -rIf
 
-all: fetus_pp fetus_c fetus_vm fetus fetoid_c fetoid brainfuck_c brainfuck
+all: fetus fetoid
 
-fetus: scripts/fetus
-	$(CP) $^ $@
+fetus: scripts/fetus fetus_pp fetus_c fetus_vm
+	$(CP) $< $@
 
-fetoid: scripts/fetoid
-	$(CP) $^ $@
+fetoid: scripts/fetoid fetoid_c fetus_vm
+	$(CP) $< $@
 
-brainfuck: scripts/brainfuck
-	$(CP) $^ $@
+brainfuck: scripts/brainfuck brainfuck_c fetus_vm
+	$(CP) $< $@
 
 fetus_vm: src/vm.cpp src/vm_core.cpp
 	$(CXX) -o $@ $^
