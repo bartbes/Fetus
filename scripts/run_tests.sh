@@ -14,19 +14,43 @@ files="$example_files $test_files"
 for file in $files; do
 	log "Running file: $file"
 	extension=`echo $file | sed 's/.*\.\(.*\)/\1/'`
+	compiled=`mktemp`
 	case $extension in
 		fts)
-			./fetus $file
+			preprocessed=`mktemp`
+			./fetus_pp $file $preprocessed
+			if [ $? -ne 0 ]; then
+				rm $preprocessed
+				continue
+			fi
+			./fetus_c $preprocessed $compiled
+			if [ $? -ne 0 ]; then
+				rm $preprocessed $compiled
+				continue
+			fi
+			rm $preprocessed
 			;;
 		ftd)
-			./fetoid $file
+			./fetoid_c $file $compiled
+			if [ $? -ne 0 ]; then
+				rm $compiled
+				continue
+			fi
 			;;
 		bf|b)
-			./brainfuck $file
+			./brainfuck_c $file $compiled
+			if [ $? -ne 0 ]; then
+				rm $compiled
+				continue
+			fi
 			;;
 		*)
 			log "Don't recognize extension $extension"
+			rm $compiled
+			continue
 			;;
 	esac
+	./fetus_vm $compiled
+	rm $compiled
 	log "Done"
 done
