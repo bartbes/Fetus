@@ -1,0 +1,7 @@
+function add a b
+	putn a + b
+	yield 0
+endfunc
+
+yield add 1 2
+

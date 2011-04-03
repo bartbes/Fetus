@@ -29,6 +29,7 @@ end
 
 local vars = {}
 local num_vars = 1
+local func_args = {}
 local code = {
 	0x03, 0x00, 0x01,
 	0x08, 0x00, 0x00
@@ -101,6 +102,11 @@ function commands.set_array(var, offset)
 		)
 end
 
+function commands.func_arg(num)
+	if not func_args[num] then compile_error("More function arguments used than allocated.") end
+	return addcode(0x02, numtoarg(func_args[num]))
+end
+
 function commands.call(func)
 	return addcode(0x05, numtoarg(func))
 end
@@ -171,23 +177,33 @@ parse = function(expression)
 	local results = {expression:match("^%s*function%s+(.+)%s*$")}
 	if #results == 1 then
 		local args = {}
-		for arg in results[1]:match("(%s+)") do
+		for arg in results[1]:gmatch("%S+") do
+			if arg:match("^%w+$") then
+				if not vars[arg] then
+					vars[arg] = num_vars
+					num_vars = num_vars + 1
+				else
+					compile_error("Variable %s already exists.", arg)
+				end
+			else
+				compile_error("Invalid variable name %s.", arg)
+			end
 			table.insert(args, arg)
 		end
-		if not args[1] then return compile_error("Function lacks a function name.") end
-		if args[1]:match("^%w+$") then
-			if not vars[args[1]] then
-				vars[args[1]] = num_vars
-				num_vars = num_vars + length
-			else
-				compile_error("Variable %s already exists.", var)
-			end
-		else
-			compile_error("Invalid function name %s.", var)
+		for i = 1, #args-#func_args-1 do
+			table.insert(func_args, num_vars)
+			num_vars = num_vars + 1
 		end
+		if not args[1] then return compile_error("Function lacks a function name.") end
 		function_name = args[1]
 		function_start = #code+1
 		addcode(0x06, 0x00, 0x00)
+		function_oldvars = {}
+		for i = 1, #args-1 do
+			local var = args[i+1]
+			function_oldvars[var] = vars[var]
+			vars[var] = func_args[i]
+		end
 		return
 	end
 	if expression:match("^%s*endfunc%s*$") then
@@ -206,6 +222,9 @@ parse = function(expression)
 			0x03, math.floor(pos/256), pos%256,
 			0x05, 0x00, 0x0d)
 		commands.set(function_name)
+		for i, v in pairs(function_oldvars) do
+			vars[i] = v
+		end
 		return
 	end
 	local results = {expression:match("^%s*if%s+(.-)%s*$")}
@@ -521,7 +540,15 @@ parse = function(expression)
 	end
 	results = {expression:match("^%s*yield%s+(.+)%s*$")}
 	if #results == 1 then
-		parse(results[1])
+		local args = {}
+		for arg in results[1]:gmatch("%S+") do
+			table.insert(args, arg)
+		end
+		for i = 1, #args-1 do
+			parse(args[i+1])
+			commands.func_arg(i)
+		end
+		parse(args[1])
 		commands.yield()
 		return
 	end
