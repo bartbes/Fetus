@@ -4,6 +4,8 @@ RM=rm -rIf
 
 all: fetus fetoid
 
+full: fetus fetoid brainfuck
+
 fetus: scripts/fetus fetus_pp fetus_c fetus_vm
 	$(CP) $< $@
 
