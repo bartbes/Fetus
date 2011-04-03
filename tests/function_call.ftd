@@ -1,6 +1,6 @@
 function add a b
 	putn a + b
-	yield 0
+	yield caller
 endfunc
 
 yield add 1 2

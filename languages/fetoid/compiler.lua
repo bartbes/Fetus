@@ -103,8 +103,8 @@ function commands.set_array(var, offset)
 end
 
 function commands.func_arg(num)
-	if not func_args[num] then compile_error("More function arguments used than allocated.") end
-	return addcode(0x02, numtoarg(func_args[num]))
+	if not func_args[num+1] then compile_error("More function arguments used than allocated.") end
+	return addcode(0x02, numtoarg(func_args[num+1]))
 end
 
 function commands.call(func)
@@ -190,13 +190,15 @@ parse = function(expression)
 			end
 			table.insert(args, arg)
 		end
-		for i = 1, #args-#func_args-1 do
+		for i = 1, #args-#func_args do
 			table.insert(func_args, num_vars)
 			num_vars = num_vars + 1
 		end
 		if not args[1] then return compile_error("Function lacks a function name.") end
 		function_name = args[1]
 		function_start = #code+1
+		commands.func_arg(0)
+		table.insert(args, 2, "caller")
 		addcode(0x06, 0x00, 0x00)
 		function_oldvars = {}
 		for i = 1, #args-1 do
