@@ -168,7 +168,24 @@ parse = function(expression)
 		addcode(0x01, 0x00, 0x00)
 		return
 	end
-	if expression:match("^%s*function%s*$") then
+	local results = {expression:match("^%s*function%s+(.+)%s*$")}
+	if #results == 1 then
+		local args = {}
+		for arg in results[1]:match("(%s+)") do
+			table.insert(args, arg)
+		end
+		if not args[1] then return compile_error("Function lacks a function name.") end
+		if args[1]:match("^%w+$") then
+			if not vars[args[1]] then
+				vars[args[1]] = num_vars
+				num_vars = num_vars + length
+			else
+				compile_error("Variable %s already exists.", var)
+			end
+		else
+			compile_error("Invalid function name %s.", var)
+		end
+		function_name = args[1]
 		function_start = #code+1
 		addcode(0x06, 0x00, 0x00)
 		return
@@ -188,6 +205,7 @@ parse = function(expression)
 			0x03, math.floor(start/256), start%256,
 			0x03, math.floor(pos/256), pos%256,
 			0x05, 0x00, 0x0d)
+		commands.set(function_name)
 		return
 	end
 	local results = {expression:match("^%s*if%s+(.-)%s*$")}

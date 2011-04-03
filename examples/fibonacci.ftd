@@ -2,13 +2,12 @@ first = 0
 second = 1
 temp = 0
 
-function
+function fibonacci
 	temp = second
 	second = first + second
 	first = temp
 	yield 0
 endfunc
-fibonacci = .
 
 counter = 1
 max = 20
