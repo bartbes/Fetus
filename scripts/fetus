@@ -44,8 +44,27 @@ if [ $PREPROCESS_ONLY ]; then
 fi
 
 if [ $COMPILE_ONLY ]; then
-	$FETUS_PP $1 - | $FETUS_C - $OUTPUT_NAME
+	$FETUS_PP $1 | $FETUS_C - $OUTPUT_NAME
 	exit 0
 fi
 
-$FETUS_PP $1 - | $FETUS_C - - | $FETUS_VM - $2 $3 $4 $5 $6 $7 $8 $9
+$FETUS_PP $1
+if [ $? -ne 0 ]; then
+	exit $?
+fi
+
+if [ $PREPROCESS_ONLY ]; then
+	exit 0
+fi
+
+$FETUS_C a.ftsp
+
+if [ $? -ne 0 ]; then
+	exit $?
+fi
+
+if [ $COMPILE_ONLY ]; then
+	exit 0
+fi
+
+$FETUS_VM a.ftsb $2 $3 $4 $5 $6 $7 $8 $9
