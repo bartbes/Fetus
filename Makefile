@@ -4,7 +4,7 @@ RM=rm -rIf
 
 all: fetus fetoid
 
-full: fetus fetoid brainfuck
+full: fetus fetoid brainfuck something
 
 .PRECIOUS: %_c %_pp
 
