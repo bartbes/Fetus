@@ -6,32 +6,24 @@ all: fetus fetoid
 
 full: fetus fetoid brainfuck
 
-fetus: scripts/fetus fetus_pp fetus_c fetus_vm
-	$(CP) $< $@
+.PRECIOUS: %_c %_pp
 
-fetoid: scripts/fetoid fetoid_c fetus_vm
-	$(CP) $< $@
+%_c: languages/%/compiler.lua
+	$(CP) $^ $@
 
-brainfuck: scripts/brainfuck brainfuck_c fetus_vm
+%_pp: languages/%/preprocessor.lua
+	$(CP) $^ $@
+	
+%_pp:
+	
+%: scripts/% %_pp %_c fetus_vm
 	$(CP) $< $@
 
 fetus_vm: src/vm.cpp src/vm_core.cpp
 	$(CXX) -o $@ $^
 
-fetus_pp: src/preprocessor.lua
-	$(CP) $^ $@
-
-fetus_c: src/compiler.lua
-	$(CP) $^ $@
-
-fetoid_c: languages/fetoid/compiler.lua
-	$(CP) $^ $@
-
-brainfuck_c: languages/brainfuck/compiler.lua
-	$(CP) $^ $@
-
 clean:
-	$(RM) fetus_vm fetus_c fetus_pp fetus fetoid_c fetoid brainfuck_c brainfuck
+	$(RM) fetus_vm *_c *_pp fetus fetoid brainfuck
 
 %: src/vm_core.cpp %.ftsb
 	src/standalone $@.ftsb $@.cpp
