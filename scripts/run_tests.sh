@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#Be sure to build the entire toolchain
+make full
+
 log()
 {
 	echo -e "\033[;32m$*\033[;37m"
