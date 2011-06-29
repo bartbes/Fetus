@@ -156,6 +156,7 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 			delete[] buffer;
 			break;*/
 		case 0x18:			//setp
+			t = stack->pop();
 			mem[stack->pop()] = t;
 			break;
 		case 0x19:			//ctxt
