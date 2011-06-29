@@ -20,6 +20,7 @@ class Stack
 		unsigned int pop();
 		unsigned int top();
 		bool empty();
+		void clear();
 };
 
 class Context
@@ -35,6 +36,7 @@ class Context
 		Stack *stack;
 
 	protected:
+		void runFunction(unsigned int function);
 		unsigned int parse(unsigned char opcode, unsigned int arg);
 
 	public:

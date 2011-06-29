@@ -24,6 +24,7 @@ set $num
 	Set the default to 10
 
 :start
+clear 0000
 put 0000
 set $prev
 call ffff
@@ -38,6 +39,7 @@ set $num
 	Subtract 2, for 0 and 1
 
 :loop
+clear 0000
 get $prev
 get $cur
 set $prev

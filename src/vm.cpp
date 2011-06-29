@@ -13,6 +13,8 @@ void Stack::push(unsigned int val)
 
 unsigned int Stack::pop()
 {
+	if (stack.empty())
+		return 0;
 	unsigned int val = stack.top();
 	stack.pop();
 	return val;
@@ -20,12 +22,20 @@ unsigned int Stack::pop()
 
 unsigned int Stack::top()
 {
+	if (stack.empty())
+		return 0;
 	return stack.top();
 }
 
 bool Stack::empty()
 {
 	return stack.empty();
+}
+
+void Stack::clear()
+{
+	while (!stack.empty())
+		stack.pop();
 }
 
 Context::Context(std::string &code, bool owned)
@@ -41,6 +51,18 @@ Context::Context(unsigned char *code, size_t length, bool owned)
 {
 	this->code = new unsigned char[codeLength];
 	memcpy(this->code, code, codeLength);
+}
+
+void Context::runFunction(unsigned int function)
+{
+	switch(function)
+	{
+		case 0xffff:			//putn
+			std::cout<<stack->top() <<std::endl;
+			break;
+		default:
+			fprintf(stderr, "Invalid function %x called\n", function);
+	}
 }
 
 unsigned int Context::parse(unsigned char opcode, unsigned int arg)
@@ -60,24 +82,23 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 		case 0x04:			//pop
 			stack->pop();
 			break;
-		/*case 0x05:			//call
-			functions(arg);
-			break;*/
+		case 0x05:			//call
+			runFunction(arg);
+			break;
 		case 0x06:			//clear
-			while (!stack->empty())
-				stack->pop();
+			stack->clear();
 			break;
 		case 0x07:			//getp
 			stack->push(mem[stack->pop()]);
 			break;
 		case 0x08:			//goto
 			if (stack->pop() > 0)
-				ip = (arg-1) * 3;
+				ip = arg * 3;
 			break;
 		case 0x09:			//gotos
 			t = stack->pop();
 			if (stack->pop() > 0)
-				ip = (t-1) * 3;
+				ip = t * 3;
 			break;
 		case 0x0a:			//add
 			t = stack->pop();
