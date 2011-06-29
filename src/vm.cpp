@@ -1,46 +1,73 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <cstring>
-#include "vm_core.h"
+#include <cstdio>
+#include "vm.h"
 
-using namespace std;
+using namespace Fetus;
 
-int main(int argc, const char **argv)
+Context::Context(std::string &code, bool owned)
+	: owned(owned)
 {
-	if (argc < 2)
+	codeLength = code.length();
+	this->code = new unsigned char[codeLength];
+	memcpy(this->code, code.c_str(), codeLength);
+}
+
+Context::Context(unsigned char *code, size_t length, bool owned)
+	: codeLength(length), owned(owned)
+{
+	this->code = new unsigned char[codeLength];
+	memcpy(this->code, code, codeLength);
+}
+
+unsigned int Context::parse(unsigned char opcode, unsigned int arg)
+{
+	return QUIT;
+}
+
+unsigned int Context::run(Stack *stack)
+{
+	unsigned int result;
+	while (ip+2 < codeLength)
 	{
-		cout<<"Usage: " <<argv[0] <<" <file>\n";
-		return 0;
+		result = parse(code[ip++], (code[ip++]<<8) | code[ip++]);
+		if (result != NOP)
+			return result;
 	}
-	char *buffer;
-	istream *f;
-	if (strcmp(argv[1], "-") == 0)
+}
+
+Context::~Context()
+{
+	delete[] code;
+}
+
+bool VM::addContext(Context* context)
+{
+	if (contexts.size() < MAX_CONTEXT)
 	{
-		std::stringstream *stream = new std::stringstream();
-		*stream << cin.rdbuf();
-		f = stream;
+		contexts.push_back(context);
+		return true;
 	}
-	else
+	return false;
+}
+
+void VM::run()
+{
+	unsigned int curContext = 0;
+	while(contexts.size() > curContext)
 	{
-		f = new ifstream(argv[1]);
+		curContext = contexts[curContext]->run(&stack);
 	}
-	f->seekg(0, ios::end);
-	int l = f->tellg();
-	f->seekg(0, ios::beg);
-	buffer = new char[l];
-	f->read(buffer, l);
-	delete f;
-	contexts.insert(0, buffer);
-	unsigned int n;
-	for (int i = 2; i < argc; i++)
+	if (curContext != QUIT)
+		fprintf(stderr, "Invalid context switch, context %x does not exist.\n", curContext);
+}
+
+VM::~VM()
+{
+	for (std::vector<Context*>::iterator i = contexts.begin(); i != contexts.end(); i++)
 	{
-		sscanf(argv[i], "%u", &n);
-		stack.push(n);
-	}
-	parse();
-	for (int i = 0; i < contexts.length(); i++)
-	{
-		delete[] contexts.get(i);
+		Context *v = *i;
+		if (v->owned)
+			delete v;
 	}
 }

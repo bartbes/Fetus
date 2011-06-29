@@ -19,13 +19,13 @@ full: fetus fetoid brainfuck
 %: scripts/% %_pp %_c fetus_vm
 	$(CP) $< $@
 
-fetus_vm: src/vm.cpp src/vm_core.cpp
+fetus_vm: src/fetus.cpp src/vm.cpp
 	$(CXX) -o $@ $^
 
 clean:
 	$(RM) fetus_vm *_c *_pp fetus fetoid brainfuck
 
-%: src/vm_core.cpp %.ftsb
+%: src/vm.cpp %.ftsb
 	src/standalone $@.ftsb $@.cpp
 	$(CXX) -o $@ $@.cpp src/vm_core.cpp -Isrc
 
