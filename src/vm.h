@@ -6,10 +6,21 @@
 namespace Fetus
 {
 
-typedef std::stack<unsigned int> Stack;
 const unsigned int QUIT = (1<<16)-1;
 const unsigned int NOP = QUIT-1;
 const unsigned int MAX_CONTEXT = NOP-1;
+
+class Stack
+{
+	private:
+		std::stack<unsigned int> stack;
+
+	public:
+		void push(unsigned int val);
+		unsigned int pop();
+		unsigned int top();
+		bool empty();
+};
 
 class Context
 {
@@ -20,6 +31,8 @@ class Context
 
 		unsigned char *code;
 		size_t codeLength;
+
+		Stack *stack;
 
 	protected:
 		unsigned int parse(unsigned char opcode, unsigned int arg);
