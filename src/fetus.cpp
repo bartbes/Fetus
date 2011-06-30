@@ -38,15 +38,13 @@ int main(int argc, const char **argv)
 	// Read the data.
 	f->read(buffer, l);
 	delete f;
+	// Create a VM.
 	VM vm;
-	Context *main = new Context((unsigned char*) buffer, l, 0);
-	// It copies, so we no longer need the buffer.
-	delete[] buffer;
-	// Add it to the VM.
-	vm.addContext(main);
+	// Create a parser and let it parse
+	// the file for us.
+	Parser p(&vm);
+	p.parseBlob(buffer, l);
 	// And start the main loop!
 	vm.run();
-	// We don't delete main?
-	// Correct, we asked the vm
-	// to do it for us.
+	return 0;
 }

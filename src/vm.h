@@ -30,6 +30,9 @@ class Stack
 		void clear();
 };
 
+// Forward declaration of the VM class.
+class VM;
+
 // A context is kind of like a file.
 // It has its own memory, but the stack
 // remains during a context switch.
@@ -54,6 +57,20 @@ class Context
 		// this context is run.
 		Stack *stack;
 
+		// Our own function pointer.
+		// (to be set by the VM)
+		unsigned int fp;
+		// And the function pointer
+		// the context we transfer control to
+		// is going to have.
+		unsigned int targetfp;
+
+		// Our context number,
+		// useful for internal
+		// 'context switches', so basically
+		// function calls.
+		unsigned int n;
+
 	protected:
 		// The functions.
 		void runFunction(unsigned int function);
@@ -61,9 +78,6 @@ class Context
 		unsigned int parse(unsigned char opcode, unsigned int arg);
 
 	public:
-		// The function pointer.
-		unsigned int fp;
-
 		// Run in this context for a bit
 		// returns the next context to run
 		unsigned int run(Stack* stack);
@@ -74,10 +88,13 @@ class Context
 
 		// Constructor time!
 		Context(std::string &code, unsigned int *funcTable, bool owned = true);
-		Context(unsigned char *code, size_t length, unsigned int *funcTable, bool owned = true);
+		Context(const unsigned char *code, size_t length, unsigned int *funcTable, bool owned = true);
 
 		// And a nice destructor
 		~Context();
+
+		// Become good friends with the VM. ;)
+		friend class VM;
 };
 
 // The actual VM, has a stack
@@ -105,6 +122,20 @@ class VM
 		// The destructor deletes all
 		// owned contexts
 		~VM();
+};
+
+// And we'll add a class that handles
+// parsing the bytecode, nice touch.
+class Parser
+{
+	private:
+		VM *vm;
+
+	public:
+		Parser(VM* vm);
+		int parseBlob(std::string &contents);
+		int parseBlob(const char *contents, size_t len);
+		int parseBlob(const unsigned char *contents, size_t len);
 };
 
 } // Fetus

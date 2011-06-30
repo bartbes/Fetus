@@ -43,12 +43,13 @@ void Stack::clear()
 
 // The context, copy the code over.
 Context::Context(std::string &code, unsigned int *funcTable, bool owned)
-	: ip(0), owned(owned)
+	: ip(0), fp(0), owned(owned)
 {
 	codeLength = code.length();
 	this->code = new unsigned char[codeLength];
 	memcpy(this->code, code.c_str(), codeLength);
-	// The first 'function' is always the start.
+	// The first 'function' is 0, just because we need
+	// a value in there, it is unused.
 	functions.push_back(0);
 	// If we got a funcTable (and not NULL), add it.
 	if (funcTable)
@@ -62,12 +63,13 @@ Context::Context(std::string &code, unsigned int *funcTable, bool owned)
 }
 
 // C string version of the above.
-Context::Context(unsigned char *code, size_t length, unsigned int *funcTable, bool owned)
-	: ip(0), codeLength(length), owned(owned)
+Context::Context(const unsigned char *code, size_t length, unsigned int *funcTable, bool owned)
+	: ip(0), codeLength(length), fp(0), owned(owned)
 {
 	this->code = new unsigned char[codeLength];
 	memcpy(this->code, code, codeLength);
-	// The first 'function' is always the start.
+	// The first 'function' is 0, just because we need
+	// a value in there, it is unused.
 	functions.push_back(0);
 	// If we got a funcTable (and not NULL), add it.
 	if (funcTable)
@@ -194,6 +196,15 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 			return arg;
 		case 0x1a:			//ctxts
 			return stack->pop();
+		case 0x1b:			//ctxtn
+			stack->push(n);
+			break;
+		case 0x1c:			//setf
+			targetfp = arg;
+			break;
+		case 0x1d:			//setfs
+			targetfp = stack->pop();
+			break;
 		default:
 			fprintf(stderr, "Invalid opcode %02x\n", opcode);
 			return QUIT;
@@ -208,6 +219,18 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 unsigned int Context::run(Stack *stack)
 {
 	this->stack = stack;
+	// If a function pointer (fp) has been set
+	// we'll continue execution from there.
+	// 0 being continue at current position.
+	if (fp != 0)
+	{
+		ip = functions[fp]*3;
+		// Reset the fp
+		fp = 0;
+	}
+	// The target fp will always be 0 until
+	// it has been set explicitly.
+	targetfp = 0;
 	unsigned int result;
 	// While we have code left...
 	while (ip+2 < codeLength)
@@ -249,10 +272,15 @@ void VM::run()
 {
 	// We start at context 0.
 	unsigned int curContext = 0;
+	unsigned int fp = 0;
 	while(contexts.size() > curContext)
 	{
+		Context *ctxt = contexts[curContext];
+		ctxt->fp = fp;
+		ctxt->n = curContext;
 		// The return value is the next context.
-		curContext = contexts[curContext]->run(&stack);
+		curContext = ctxt->run(&stack);
+		fp = ctxt->targetfp;
 	}
 	// This context doesn't exist,
 	// you lying bastard!
@@ -270,4 +298,80 @@ VM::~VM()
 		if (v->owned)
 			delete v;
 	}
+}
+
+Parser::Parser(VM *vm)
+	: vm(vm)
+{
+}
+
+int Parser::parseBlob(std::string &contents)
+{
+	return parseBlob((const unsigned char *) contents.c_str(), contents.length());
+}
+
+int Parser::parseBlob(const char *contents, size_t len)
+{
+	return parseBlob((const unsigned char *) contents, len);
+}
+
+int Parser::parseBlob(const unsigned char *contents, size_t len)
+{
+	// Do we have a header?
+	if (contents[0] != 0xff)
+	{
+		// No? We'll have to assume this
+		// is purely code, so just parse
+		// it as such.
+		Context *ctxt = new Context(contents, len, 0, true);
+		vm->addContext(ctxt);
+		// Only 1 context has been created.
+		return 1;
+	}
+	// So there's a header, let's parse it.
+
+	// The position of our current context header.
+	std::vector<unsigned int> functions;
+	unsigned char opcode;
+	unsigned int arg;
+	// The amount of contexts we've added.
+	unsigned int contexts = 0;
+	// Parse the header.
+	for (unsigned int i = 3; contents[i] > 0xf0 && i < len;)
+	{
+		opcode = contents[i];
+		arg = (contents[i+1] << 8) | contents[i+2];
+		switch(opcode)
+		{
+			case 0xf0:		//function
+				functions.push_back(arg);
+				break;
+			case 0xf1:		//next context header
+				// Turn the function table into the proper format.
+				unsigned int *funcTable = new unsigned int[functions.size()+1];
+				unsigned int counter = 0;
+				for (std::vector<unsigned int>::iterator f = functions.begin(); f != functions.end(); f++, counter++)
+				{
+					funcTable[counter] = *f;
+				}
+				funcTable[functions.size()] = 0;
+				functions.clear();
+
+				size_t length = (arg == 0) ? len-i-3 : arg-i-3;
+				Context *ctxt = new Context(contents+i+3, length, funcTable, true);
+				delete[] funcTable; // Context makes a copy.
+				vm->addContext(ctxt);
+				contexts++;
+
+				// A value of 0 is a special one
+				// indicating the last header.
+				if (arg == 0)
+					i = len;
+				else
+					i = arg;
+				continue;
+		}
+		i += 3;
+	}
+	return contexts;
 }
