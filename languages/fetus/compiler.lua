@@ -1,5 +1,13 @@
 #!/usr/bin/env lua
 
+function unescape(str)
+	str = str:gsub("\\(%d%d%d)", string.char)
+	return str:gsub("\\(.)", function(x)
+		local res = loadstring([[return '\]] .. x .. [[']])()
+		return res
+	end)
+end
+
 commandlist = {
 	get = 0x01,
 	set = 0x02,
@@ -48,14 +56,42 @@ if not o then
 	print("Could not open file " .. arg[2])
 	return 1
 end
-local command, args
+local output = ""
+local command, args, str
+local strings = {}
 for line in i:lines() do
 	command, args = line:match("^(%a+) (%w%w%w%w)$")
 	if command and args and commandlist[command] then
-		o:write(string.char(commandlist[command]))
-		o:write(string.char(tonumber(args:sub(1, 2), 16)))
-		o:write(string.char(tonumber(args:sub(3, 4), 16)))
+		output = output .. string.char(commandlist[command])
+		output = output .. string.char(tonumber(args:sub(1, 2), 16))
+		output = output .. string.char(tonumber(args:sub(3, 4), 16))
+	end
+	str = line:match("^\"(.+)\"$")
+	if str then
+		table.insert(strings, (unescape(str)))
 	end
 end
+
+local header = string.char(0xff, 0x00, 0x00)
+for i, v in ipairs(strings) do
+	local i = 0
+	local oc = 0
+	for c in v:gmatch(".") do
+		if i % 2 == 0 then
+			header = header .. string.char(0xf2)
+		end
+		i = i + 1
+		header = header .. c
+	end
+	if i % 2 ~= 0 then
+		header = header .. string.char(0)
+	else
+		header = header .. string.char(0xf2, 0x0, 0x0)
+	end
+end
+header = header .. string.char(0xf1, 0x00, 0x00)
+
+o:write(header .. output)
+
 i:close()
 o:close()

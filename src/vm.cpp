@@ -82,11 +82,19 @@ Context::Context(const unsigned char *code, size_t length, unsigned int *funcTab
 	}
 }
 
+void Context::setStrings(std::vector<std::string> strings)
+{
+	this->strings = strings;
+}
+
 // The Fetus functions, in a nice big switch-case
 void Context::runFunction(unsigned int function)
 {
 	switch(function)
 	{
+		case 0x0001:			//puts
+			std::cout<<strings[stack->pop()];
+			break;
 		case 0xffff:			//putn
 			std::cout<<stack->top() <<std::endl;
 			break;
@@ -336,6 +344,13 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 	unsigned int arg;
 	// The amount of contexts we've added.
 	unsigned int contexts = 0;
+	// Create temporary values we need.
+	unsigned int *funcTable;
+	unsigned int counter;
+	size_t length;
+	Context *ctxt;
+	std::string str = "";
+	std::vector<std::string> strings;
 	// Parse the header.
 	for (unsigned int i = 3; contents[i] > 0xf0 && i < len;)
 	{
@@ -348,8 +363,8 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 				break;
 			case 0xf1:		//next context header
 				// Turn the function table into the proper format.
-				unsigned int *funcTable = new unsigned int[functions.size()+1];
-				unsigned int counter = 0;
+				funcTable = new unsigned int[functions.size()+1];
+				counter = 0;
 				for (std::vector<unsigned int>::iterator f = functions.begin(); f != functions.end(); f++, counter++)
 				{
 					funcTable[counter] = *f;
@@ -357,9 +372,11 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 				funcTable[functions.size()] = 0;
 				functions.clear();
 
-				size_t length = (arg == 0) ? len-i-3 : arg-i-3;
-				Context *ctxt = new Context(contents+i+3, length, funcTable, true);
+				length = (arg == 0) ? len-i-3 : arg-i-3;
+				ctxt = new Context(contents+i+3, length, funcTable, true);
 				delete[] funcTable; // Context makes a copy.
+				ctxt->setStrings(strings);
+				strings.clear();
 				vm->addContext(ctxt);
 				contexts++;
 
@@ -370,6 +387,24 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 				else
 					i = arg;
 				continue;
+			case 0xf2:		//string
+				if (contents[i+1] == 0)
+				{
+					strings.push_back(str);
+					str = std::string("");
+				}
+				else if (contents[i+2] == 0)
+				{
+					str += contents[i+1];
+					strings.push_back(str);
+					str = std::string("");
+				}
+				else
+				{
+					str += contents[i+1];
+					str += contents[i+2];
+				}
+				break;
 		}
 		i += 3;
 	}

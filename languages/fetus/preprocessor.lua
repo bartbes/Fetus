@@ -1,22 +1,7 @@
 #!/usr/bin/env lua
 
-function unescape(str)
-	str = str:gsub("\\(%d%d%d)", string.char)
-	return str:gsub("\\(.)", function(x)
-		local res = loadstring([[return '\]] .. x .. [[']])()
-		return res
-	end)
-end
-
-function parsestrings(str)
-	str = unescape(str)
-	local r = ""
-	for i = 1, #str do
-		r = r .. string.format("put %04x\n", string.byte(str:sub(i, i)))
-	end
-	r = r .. "put 0000\n"
-	return r
-end
+function parsestrings(output)
+	return end
 
 if not arg then
 	print("Must be called from the command line")
@@ -35,7 +20,6 @@ if not arg[2] then arg[2] = "a.ftsp" end
 local o = arg[2] == "-" and io.stdout or io.open(arg[2], "w")
 local content = i:read("*a")
 content = content:gsub("\r\n", "\n")
-content = content:gsub("\"(.-)\"", parsestrings)
 content = content:gsub("\nfinish\n", "\nput 0001\ngoto :end\n")
 if content:sub(1, 2) == "#!" then
 	content = content:match("#!.-\n(.*)")
@@ -44,6 +28,9 @@ local labels = {}
 local vars = {}
 local count = 0
 local output = ""
+content:gsub("\"(.-)\"", function(str)
+				output = output .. "\"" .. str .. "\"\n"
+			end)
 local labelinserts = {}
 local m, addr
 for line in content:gmatch("(.-)\n") do

@@ -48,6 +48,8 @@ class Context
 		unsigned int ip;
 		// The function table.
 		std::vector<unsigned int> functions;
+		// And a string table.
+		std::vector<std::string> strings;
 
 		// The raw bytecode and its length.
 		unsigned char *code;
@@ -89,6 +91,9 @@ class Context
 		// Constructor time!
 		Context(std::string &code, unsigned int *funcTable, bool owned = true);
 		Context(const unsigned char *code, size_t length, unsigned int *funcTable, bool owned = true);
+
+		// Set the strings.
+		void setStrings(std::vector<std::string> strings);
 
 		// And a nice destructor
 		~Context();
