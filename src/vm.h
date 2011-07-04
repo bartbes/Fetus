@@ -14,6 +14,21 @@ const unsigned int NOP = QUIT-1;
 // The maximum context index.
 const unsigned int MAX_CONTEXT = NOP-1;
 
+// A file descriptor.
+struct Handle
+{
+	enum {
+		TYPE_FILE,
+		TYPE_TCP,
+		TYPE_UDP
+	} type;
+	bool open;
+	union {
+		int sock;
+		FILE *file;
+	} handle;
+};
+
 // Stack is a thing wrapper around std::stack.
 class Stack
 {
@@ -50,6 +65,11 @@ class Context
 		std::vector<unsigned int> functions;
 		// And a string table.
 		std::vector<std::string> strings;
+		// Handles.
+		std::vector<Handle> handles;
+
+		// A current string.
+		std::string curstring;
 
 		// The raw bytecode and its length.
 		unsigned char *code;
@@ -72,6 +92,10 @@ class Context
 		// 'context switches', so basically
 		// function calls.
 		unsigned int n;
+
+		// A convenience internal
+		// getString function.
+		std::string &getString(unsigned int num);
 
 	protected:
 		// The functions.
