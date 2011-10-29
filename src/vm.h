@@ -51,9 +51,6 @@ class VM;
 // A context is kind of like a file.
 // It has its own memory, but the stack
 // remains during a context switch.
-// There is one other thing you can influence
-// namely the 'function pointer', which denotes
-// a function location in the function table.
 class Context
 {
 	private:
@@ -78,23 +75,11 @@ class Context
 		// The stack pointer, it's set whenever
 		// this context is run.
 		Stack *stack;
+		// A call stack.
+		Stack callStack;
 
-		// Our own function pointer.
-		// (to be set by the VM)
-		unsigned int fp;
-		// And the function pointer
-		// the context we transfer control to
-		// is going to have.
-		unsigned int targetfp;
-
-		// Our context number,
-		// useful for internal
-		// 'context switches', so basically
-		// function calls.
-		unsigned int n;
-
-		// A convenience internal
-		// getString function.
+		// A convenience function.
+		// Internal getString.
 		std::string &getString(unsigned int num);
 
 	protected:
@@ -111,6 +96,9 @@ class Context
 		// Do we own (and therefore delete)
 		// this context as a vm?
 		bool owned;
+
+		// Our context number.
+		unsigned int n;
 
 		// Constructor time!
 		Context(std::string &code, unsigned int *funcTable, bool owned = true);

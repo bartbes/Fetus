@@ -35,6 +35,10 @@ commandlist = {
 	setp = 0x18,
 	ctxt = 0x19,
 	ctxts = 0x1a,
+	ctxtn = 0x1b,
+	call = 0x1d,
+	calls = 0x1e,
+	return = 0x1f,
 }
 
 if not arg then

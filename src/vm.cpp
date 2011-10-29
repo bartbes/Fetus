@@ -45,7 +45,7 @@ void Stack::clear()
 
 // The context, copy the code over.
 Context::Context(std::string &code, unsigned int *funcTable, bool owned)
-	: ip(0), fp(0), owned(owned)
+	: ip(0), owned(owned)
 {
 	codeLength = code.length();
 	this->code = new unsigned char[codeLength];
@@ -67,7 +67,7 @@ Context::Context(std::string &code, unsigned int *funcTable, bool owned)
 
 // C string version of the above.
 Context::Context(const unsigned char *code, size_t length, unsigned int *funcTable, bool owned)
-	: ip(0), codeLength(length), fp(0), owned(owned)
+	: ip(0), codeLength(length), owned(owned)
 {
 	this->code = new unsigned char[codeLength];
 	memcpy(this->code, code, codeLength);
@@ -439,11 +439,22 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 		case 0x1b:			//ctxtn
 			stack->push(n);
 			break;
-		case 0x1c:			//setf
-			targetfp = arg;
+		case 0x1d:			//call
+			// Store our 'current' position.
+			// Of course offset by one instruction,
+			// so we won't loop forever.
+			callStack.push(ip+3);
+			ip = arg * 3;
 			break;
-		case 0x1d:			//setfs
-			targetfp = stack->pop();
+		case 0x1e:			//calls
+			t = stack->pop();
+			// Do the same as above.
+			callStack.push(ip+3);
+			ip = t * 3;
+			break;
+		case 0x1f:			//return
+			//Just go back!
+			ip = callStack.pop();
 			break;
 		default:
 			fprintf(stderr, "Invalid opcode %02x\n", opcode);
@@ -459,18 +470,7 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 unsigned int Context::run(Stack *stack)
 {
 	this->stack = stack;
-	// If a function pointer (fp) has been set
-	// we'll continue execution from there.
-	// 0 being continue at current position.
-	if (fp != 0)
-	{
-		ip = functions[fp]*3;
-		// Reset the fp
-		fp = 0;
-	}
-	// The target fp will always be 0 until
-	// it has been set explicitly.
-	targetfp = 0;
+
 	unsigned int result;
 	// While we have code left...
 	while (ip+2 < codeLength)
@@ -516,11 +516,9 @@ void VM::run()
 	while(contexts.size() > curContext)
 	{
 		Context *ctxt = contexts[curContext];
-		ctxt->fp = fp;
 		ctxt->n = curContext;
 		// The return value is the next context.
 		curContext = ctxt->run(&stack);
-		fp = ctxt->targetfp;
 	}
 	// This context doesn't exist,
 	// you lying bastard!
