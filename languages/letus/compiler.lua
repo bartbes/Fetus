@@ -207,7 +207,27 @@ local function lexicalscope(env, key, value)
 end
 
 function special.let(output, node)
-	environment = setmetatable({[" "] = environment}, {__index = environment, __newindex = lexicalscope})
+	assert(#node > 2, "let needs at least 3 arguments")
+	-- do our scoping
+	local newenv = setmetatable({[" "] = environment}, {__index = environment, __newindex = lexicalscope})
+
+	-- let's handle the real let syntax
+	-- the first argument is a list of pairs
+	local lets = table.remove(node, 2)
+	for _, pair in ipairs(lets) do
+		if type(pair[2]) == "table" then
+			compileNode(output, pair[2])
+		else
+			compileLiteral(output, pair[2])
+		end
+		rawset(newenv, pair[1], addVariable())
+		output:write(string.char(opcodeList.set, oneToTwo(newenv[pair[1]])))
+	end
+
+	--actually switch the environments
+	environment = newenv
+
+	-- compile the rest as if it was a begin
 	node[1] = "begin"
 	compileNode(output, node)
 	environment = environment[" "]
