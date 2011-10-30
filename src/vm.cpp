@@ -439,18 +439,17 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 		case 0x1b:			//ctxtn
 			stack->push(n);
 			break;
-		case 0x1d:			//call
+		case 0x1d:			//fcall
 			// Store our 'current' position.
-			// Of course offset by one instruction,
-			// so we won't loop forever.
-			callStack.push(ip+3);
-			ip = arg * 3;
+			// Actually the next, of course.
+			callStack.push(ip);
+			ip = functions[arg] * 3;
 			break;
-		case 0x1e:			//calls
+		case 0x1e:			//fcalls
 			t = stack->pop();
 			// Do the same as above.
-			callStack.push(ip+3);
-			ip = t * 3;
+			callStack.push(ip);
+			ip = functions[t] * 3;
 			break;
 		case 0x1f:			//return
 			//Just go back!
@@ -567,7 +566,7 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 		return 1;
 	}
 	// So there's a header, let's parse it.
-
+	
 	// The position of our current context header.
 	std::vector<unsigned int> functions;
 	unsigned char opcode;
@@ -582,7 +581,7 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 	std::string str = "";
 	std::vector<std::string> strings;
 	// Parse the header.
-	for (unsigned int i = 3; contents[i] > 0xf0 && i < len;)
+	for (unsigned int i = 3; contents[i] >= 0xf0 && i < len;)
 	{
 		opcode = contents[i];
 		arg = (contents[i+1] << 8) | contents[i+2];

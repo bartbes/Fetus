@@ -27,6 +27,15 @@ commandlist = {
 	[0x18] = "setp",
 	[0x19] = "ctxt",
 	[0x1a] = "ctxts",
+	[0x1b] = "ctxtn",
+	[0x1d] = "fcall",
+	[0x1e] = "fcalls",
+	[0x1f] = "return",
+
+	[0xf0] = "function",
+	[0xf1] = "nextheader",
+	[0xf2] = "string",
+	[0xff] = "startheader",
 }
 
 if not arg then
