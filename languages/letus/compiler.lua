@@ -72,7 +72,6 @@ local commandList = {
 }
 
 local function node(command, args)
-	assert(command, "Invalid node")
 	if not args then
 		return command
 	end
@@ -111,6 +110,20 @@ do
 	end
 end
 
+local function lexicalscope(env, key, value)
+	if rawget(env, key) then
+		rawset(env, key, value)
+	elseif not env[key] then
+		rawset(env, key, value)
+	else
+		env[" "][key] = value
+	end
+end
+
+local function createEnv()
+	return setmetatable({[" "] = environment}, {__index = environment, __newindex = lexicalscope})
+end
+
 local opcodes = {}
 local special = {}
 
@@ -142,6 +155,12 @@ end
 function opcodes.begin()
 end
 
+local function set(output, var)
+	return output:write(
+		string.char(opcodeList.set, oneToTwo(var)) ..
+		string.char(opcodeList.pop, 0x00, 0x00))
+end
+
 special["set!"] = function(output, node)
 	assert(#node < 4, "Can't assign multiple values to a variable")
 	assert(#node > 1, "Need a variable name and a value")
@@ -158,18 +177,43 @@ special["set!"] = function(output, node)
 	end
 	local var = environment[varname] or addVariable()
 	environment[varname] = var
-	output:write(string.char(opcodeList.set, oneToTwo(var)))
+	set(output, var)
 end
 
 function special.lambda(output, node)
+	-- store our curent position
 	local pos = output:getPos()
+
+	--create an environment for ourselves
+	environment = createEnv()
+
+	--parse the argument list
+	local args = table.remove(node, 2)
+	for i = #args, 1, -1 do
+		rawset(environment, args[i], addVariable())
+		set(output, environment[args[i]])
+	end
+
+	--compile as if it were a begin statement
 	node[1] = "begin"
 	compileNode(output, node)
+
+	--add a return statement
 	opcodes.call(output, "return")
+
+	--restore the environment
+	environment = environment[" "]
+
+	--at the start, write a jump to the end
+	--so it doesn't get run on definition
 	output:writeAt(pos, string.char(
 		opcodeList.put, 0x00, 0x01,
 		opcodeList.goto, oneToTwo(output:getPos()+2)))
+
+	--register it in the header
 	local value = makeHeader("function", pos+2)
+
+	--return the assigned id
 	opcodes.push(output, value)
 end
 
@@ -196,20 +240,11 @@ special["if"] = function(output, node)
 	output:writeAt(pos+1, string.char(opcodeList.goto, oneToTwo(falsecond+1)))
 end
 
-local function lexicalscope(env, key, value)
-	if rawget(env, key) then
-		rawset(env, key, value)
-	elseif not env[key] then
-		rawset(env, key, value)
-	else
-		env[" "][key] = value
-	end
-end
 
 function special.let(output, node)
 	assert(#node > 2, "let needs at least 3 arguments")
 	-- do our scoping
-	local newenv = setmetatable({[" "] = environment}, {__index = environment, __newindex = lexicalscope})
+	local newenv = createEnv()
 
 	-- let's handle the real let syntax
 	-- the first argument is a list of pairs
@@ -221,7 +256,7 @@ function special.let(output, node)
 			compileLiteral(output, pair[2])
 		end
 		rawset(newenv, pair[1], addVariable())
-		output:write(string.char(opcodeList.set, oneToTwo(newenv[pair[1]])))
+		set(output, newenv[pair[1]])
 	end
 
 	--actually switch the environments
@@ -265,7 +300,6 @@ function parseSexpr(sexpr)
 		rest = _rest
 	end
 	command = table.remove(args, 1)
-	assert(command)
 
 	return node(command, args)
 end
