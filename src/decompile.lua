@@ -57,6 +57,8 @@ while line do
 	local a, b, c = string.byte(line:sub(1, 1)), string.byte(line:sub(2, 2)), string.byte(line:sub(3, 3))
 	print(("%04x:  %02x%02x%02x    %s %02x%02x"):format(linenum, a, b, c, commandlist[a] or "unknown", b, c))
 	line = i:read(3)
-	linenum = linenum + 1
+	if a < 0xf0 then
+		linenum = linenum + 1
+	end
 end
 i:close()
