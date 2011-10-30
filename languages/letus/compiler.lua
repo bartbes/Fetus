@@ -372,7 +372,11 @@ function main(argv0, arg)
 		return 1
 	end
 
-	local contents = i:read("*a")
+	local contents = i:read("*l")
+	if contents:sub(1, 2) == "#!" then
+		contents = ""
+	end
+	contents = contents .. i:read("*a")
 	parseCode(contents)
 	
 	output = {
