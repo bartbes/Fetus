@@ -1,7 +1,14 @@
 #!/usr/bin/env lua
 
 local tree
-local variables = {}
+local environment = {}
+local variables = 0
+environment[" "] = environment
+
+local function addVariable()
+	variables = variables + 1
+	return variables
+end
 
 local opcodeList = {
 	get = 0x01,
@@ -116,8 +123,8 @@ function opcodes.get(output, var)
 end
 
 function opcodes.call(output, command)
-	if variables[command] then
-		local var1, var2 = oneToTwo(variables[command])
+	if environment[command] then
+		local var1, var2 = oneToTwo(environment[command])
 		return output:write(string.char(
 			opcodeList.get, var1, var2,
 			opcodeList.fcalls, 0x00, 0x00))
@@ -147,10 +154,10 @@ special["set!"] = function(output, node)
 	if type(node[3]) == "table" then
 		compileNode(output, node[3])
 	else
-		opcodes.push(output, parseLiteral(node[3]))
+		compileLiteral(output, node[3])
 	end
-	local var = variables[varname] or #variables+1
-	variables[varname] = var
+	local var = environment[varname] or addVariable()
+	environment[varname] = var
 	output:write(string.char(opcodeList.set, oneToTwo(var)))
 end
 
@@ -189,12 +196,32 @@ special["if"] = function(output, node)
 	output:writeAt(pos+1, string.char(opcodeList.goto, oneToTwo(falsecond+1)))
 end
 
+local function lexicalscope(env, key, value)
+	if rawget(env, key) then
+		rawset(env, key, value)
+	elseif not env[key] then
+		rawset(env, key, value)
+	else
+		env[" "][key] = value
+	end
+end
+
+function special.let(output, node)
+	environment = setmetatable({[" "] = environment}, {__index = environment, __newindex = lexicalscope})
+	node[1] = "begin"
+	compileNode(output, node)
+	environment = environment[" "]
+end
+
+function special.comment()
+end
+
 function compileLiteral(output, literal)
 	if tonumber(literal) then
 		return opcodes.push(output, tonumber(literal))
 	end
-	if variables[literal] then
-		return opcodes.get(output, variables[literal])
+	if environment[literal] then
+		return opcodes.get(output, environment[literal])
 	end
 	error(("Unknown variable %s"):format(literal))
 end
