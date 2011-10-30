@@ -158,6 +158,7 @@ function special.lambda(output, node)
 	local pos = output:getPos()
 	node[1] = "begin"
 	compileNode(output, node)
+	opcodes.call(output, "return")
 	output:writeAt(pos, string.char(
 		opcodeList.put, 0x00, 0x01,
 		opcodeList.goto, oneToTwo(output:getPos()+2)))
