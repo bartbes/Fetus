@@ -165,6 +165,29 @@ function special.lambda(output, node)
 	opcodes.push(output, value)
 end
 
+special["if"] = function(output, node)
+	assert(#node > 2, "If requires at least 2 arguments")
+	assert(#node < 5, "If handles no more than 3 arguments")
+	--compile the condition first
+	compileNode(output, node[2])
+	--prepare our jump
+	local pos = output:getPos()
+	output:write(string.char(opcodeList["not"], 0x00, 0x00))
+	--compile our true condition
+	compileNode(output, node[3])
+	--and if we have one, our false condition
+	local falsecond = output:getPos()+2
+	if #node == 4 then
+		output:write(string.char(opcodeList.put, 0x00, 0x01))
+		falsecond = output:getPos()+1
+		compileNode(output, node[4])
+		--put a jump to the end after the true
+		output:writeAt(falsecond-1, string.char(opcodeList.goto, oneToTwo(output:getPos()+2)))
+	end
+	--rewrite the jump with the now-determined location
+	output:writeAt(pos+1, string.char(opcodeList.goto, oneToTwo(falsecond+1)))
+end
+
 function compileLiteral(output, literal)
 	if tonumber(literal) then
 		return opcodes.push(output, tonumber(literal))
