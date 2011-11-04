@@ -170,11 +170,7 @@ special["set!"] = function(output, node)
 	assert(not varname:match("%b()"), "Can't assign a value to an S-expression")
 
 	local value
-	if type(node[3]) == "table" then
-		compileNode(output, node[3])
-	else
-		compileLiteral(output, node[3])
-	end
+	compileNodeOrLiteral(output, node[3])
 	local var = environment[varname] or addVariable()
 	environment[varname] = var
 	set(output, var)
@@ -250,11 +246,7 @@ function special.let(output, node)
 	-- the first argument is a list of pairs
 	local lets = table.remove(node, 2)
 	for _, pair in ipairs(lets) do
-		if type(pair[2]) == "table" then
-			compileNode(output, pair[2])
-		else
-			compileLiteral(output, pair[2])
-		end
+		compileNodeOrLiteral(output, pair[2])
 		rawset(newenv, pair[1], addVariable())
 		set(output, newenv[pair[1]])
 	end
@@ -339,13 +331,17 @@ function compileNode(output, node)
 		return special[node[1]](output, node)
 	end
 	for i = 2, #node do
-		if type(node[i]) == "table" then
-			compileNode(output, node[i])
-		else
-			compileLiteral(output, node[i])
-		end
+		compileNodeOrLiteral(output, node[i])
 	end
 	opcodes.call(output, node[1])
+end
+
+function compileNodeOrLiteral(output, node)
+	if type(node) == "table" then
+		return compileNode(output, node)
+	else
+		return compileLiteral(output, node)
+	end
 end
 
 function main(argv0, arg)
