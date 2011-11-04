@@ -222,13 +222,13 @@ special["if"] = function(output, node)
 	local pos = output:getPos()
 	output:write(string.char(opcodeList["not"], 0x00, 0x00))
 	--compile our true condition
-	compileNode(output, node[3])
+	compileNodeOrLiteral(output, node[3])
 	--and if we have one, our false condition
 	local falsecond = output:getPos()+2
 	if #node == 4 then
 		output:write(string.char(opcodeList.put, 0x00, 0x01))
 		falsecond = output:getPos()+1
-		compileNode(output, node[4])
+		compileNodeOrLiteral(output, node[4])
 		--put a jump to the end after the true
 		output:writeAt(falsecond-1, string.char(opcodeList.goto, oneToTwo(output:getPos()+2)))
 	end
