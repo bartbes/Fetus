@@ -29,6 +29,12 @@ int main(int argc, const char **argv)
 	{
 		f = new ifstream(argv[1]);
 	}
+	if (f->fail())
+	{
+		cout<<"Input error" <<endl;
+		delete f;
+		return 1;
+	}
 	// Determine the size.
 	f->seekg(0, ios::end);
 	int l = f->tellg();
