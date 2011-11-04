@@ -25,6 +25,11 @@ Fetoid is a language that you can actually consider high-level, though it's prim
 
 More documentation will hopefully be added later, but currently the language is too much in flux for documentation to be written.
 
+###Letus###
+Oh yes, the name is horrible, and it will be changed. Sometime. I swear.
+
+What kind of language is it, you ask? Well, it's a language based on S-expressions. This means it's lisp-like in syntax, and I have, in fact borrowed a few things from scheme.
+
 ###Brainfuck###
 A simple brainfuck compiler is included, it *should* all work, but it has not been tested thoroughly. Because brainfuck has a very loose specification, it is very possible that existing (advanced) brainfuck code won't work.
 
@@ -35,6 +40,8 @@ On first run, 'make all' should be executed to compile the VM, and the tools for
 * brainfuck_c - The Brainfuck compiler.
 * fetoid - A script that compiles and runs a Fetoid program.
 * fetoid_c - The Fetoid compiler.
+* letus - A script that compiles and runs a Letus program.
+* letus_c - The Letus compiler.
 * fetus - A script that preprocesses, compiles and runs a Fetus language program.
 * fetus_c - The Fetus language compiler.
 * fetus_pp - The Fetus language preprocessor.
