@@ -327,6 +327,9 @@ void Context::runFunction(unsigned int function)
 			curstring = "";
 			stack->push(strings.size());
 			break;
+		case 0xfffe:			//putc
+			cout<<(char) stack->top();
+			break;
 		case 0xffff:			//putn
 			cout<<stack->top() <<std::endl;
 			break;

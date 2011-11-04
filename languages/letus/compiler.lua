@@ -45,6 +45,7 @@ local opcodeList = {
 
 local functionList = {
 	putn = 0xffff,
+	putc = 0xfffe,
 }
 
 local commandList = {
