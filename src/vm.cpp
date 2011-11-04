@@ -43,6 +43,30 @@ void Stack::clear()
 		stack.pop();
 }
 
+FileHandle::FileHandle(const char *filename, const char *mode)
+{
+	file = fopen(filename, mode);
+	open = true;
+}
+
+FileHandle::~FileHandle()
+{
+	fclose(file);
+	open = false;
+}
+
+size_t FileHandle::read(char *buffer, size_t len)
+{
+	len = fread(buffer, 1, len-1, file);
+	buffer[len] = 0;
+	return len;
+}
+
+void FileHandle::write(const char *buffer, size_t len)
+{
+	fwrite(buffer, 1, len, file);
+}
+
 // The context, copy the code over.
 Context::Context(std::string &code, unsigned int *funcTable, bool owned)
 	: ip(0), owned(owned)
@@ -101,10 +125,11 @@ std::string &Context::getString(unsigned int num)
 // The Fetus functions, in a nice big switch-case
 void Context::runFunction(unsigned int function)
 {
-	unsigned int t;
+	unsigned int t, point, size;
 	char *buffer;
 	const char *mode;
-	Handle handle;
+	Handle *handle;
+	std::string tempstr;
 	switch(function)
 	{
 		case 0x0001:			//puts
@@ -130,76 +155,40 @@ void Context::runFunction(unsigned int function)
 				mode = "a";
 			else
 				return;
-			handle.type = Handle::TYPE_FILE;
-			handle.handle.file = fopen(curstring.c_str(), mode);
-			handle.open = true;
+			handle = new FileHandle(curstring.c_str(), mode);
 			handles.push_back(handle);
 			stack->push(handles.size());
 			break;
 		case 0x0004:		//close
 			t = stack->pop();
 			handle = handles[t];
-			if (!handle.open)
+			if (!handle || !handle->open)
 				return;
-			switch (handle.type)
-			{
-				case Handle::TYPE_FILE:
-					fclose(handle.handle.file);
-					break;
-				case Handle::TYPE_TCP:
-				case Handle::TYPE_UDP:
-					close(handle.handle.sock);
-					break;
-			}
-			handle.open = false;
+			delete handle;
+			handles[t] = 0;
 			break;
-		/*case 0x0005:		//read
-			id = stack[0];
-			p = stack[1];
-			s = stack[2];
-			stack.clear();
-			file = handles.get(id);
-			if (!file.open)
+		case 0x0005:		//read
+			size = stack->pop();
+			t = stack->pop(); //handle id
+			handle = handles[t];
+			if (!handle || !handle->open)
 				return;
-			buffer = new char[s];
-			memset(buffer, 0, s);
-			switch (file.t)
-			{
-				case 0:
-					s = fread(buffer, 1, s-1, file.file);
-					buffer[s] = 0;
-					insertmem(p, buffer);
-					break;
-				case 1:
-				case 2:
-					s = recv(file.sock, buffer, s, 0);
-					buffer[s] = 0;
-					insertmem(p, buffer);
-					break;
-			}
-			stack.push(s);
+			buffer = new char[size];
+			memset(buffer, 0, size);
+			stack->push(handle->read(buffer, size));
+			curstring = buffer;
 			delete[] buffer;
 			break;
 		case 0x0006:		//write
-			p = stack[0];
-			buffer = extractstack(1);
-			stack.clear();
-			file = handles.get(p);
-			if (!file.open)
+			size = stack->pop();
+			tempstr = getString(stack->pop());
+			t = stack->pop(); //handle id
+			handle = handles[t];
+			if (!handle || !handle->open)
 				return;
-			switch (file.t)
-			{
-				case 0:
-					fprintf(file.file, "%s", buffer);
-					fflush(file.file);
-					break;
-				case 1:
-					send(file.sock, buffer, strlen(buffer), 0);
-					break;
-			}
-			delete[] buffer;
+			handle->write(tempstr.c_str(), size);
 			break;
-		case 0x0007:		//tcp
+		/*case 0x0007:		//tcp
 			ipbuffer = extractstack(0);
 			p = stack[strlen(ipbuffer)+1];
 			stack.clear();

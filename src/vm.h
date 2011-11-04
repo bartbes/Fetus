@@ -15,19 +15,44 @@ const unsigned int NOP = QUIT-1;
 const unsigned int MAX_CONTEXT = NOP-1;
 
 // A file descriptor.
-struct Handle
+class Handle
 {
-	enum {
-		TYPE_FILE,
-		TYPE_TCP,
-		TYPE_UDP
-	} type;
+public:
 	bool open;
-	union {
-		int sock;
-		FILE *file;
-	} handle;
+
+	virtual size_t read(char *buffer, size_t len) = 0;
+	virtual void write(const char *buffer, size_t len) = 0;
 };
+
+class FileHandle : public Handle
+{
+private:
+	FILE *file;
+public:
+	size_t read(char *buffer, size_t len);
+	void write(const char *buffer, size_t len);
+
+	FileHandle(const char *filename, const char *mode);
+	~FileHandle();
+};
+
+/*class TcpHandle : public Handle
+{
+private:
+	int sock;
+public:
+	void read(char *buffer, size_t len);
+	void write(char *buffer, size_t len);
+};
+
+class UdpHandle : public Handle
+{
+private:
+	int sock;
+public:
+	void read(char *buffer, size_t len);
+	void write(char *buffer, size_t len);
+};*/
 
 // Stack is a thing wrapper around std::stack.
 class Stack
@@ -63,7 +88,7 @@ class Context
 		// And a string table.
 		std::vector<std::string> strings;
 		// Handles.
-		std::vector<Handle> handles;
+		std::vector<Handle*> handles;
 
 		// A current string.
 		std::string curstring;
