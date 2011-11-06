@@ -38,9 +38,11 @@ local opcodeList = {
 	ctxt = 0x19,
 	ctxts = 0x1a,
 	ctxtn = 0x1b,
-	fcall = 0x1d,
-	fcalls = 0x1e,
-	["return"] = 0x1f,
+	fcall = 0x20,
+	fcalls = 0x21,
+	tcall = 0x21,
+	tcalls = 0x22,
+	["return"] = 0x25,
 }
 
 local functionList = {

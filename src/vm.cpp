@@ -431,19 +431,27 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 		case 0x1b:			//ctxtn
 			stack->push(n);
 			break;
-		case 0x1d:			//fcall
+		case 0x20:			//fcall
 			// Store our 'current' position.
 			// Actually the next, of course.
 			callStack.push(ip);
 			ip = functions[arg] * 3;
 			break;
-		case 0x1e:			//fcalls
+		case 0x21:			//fcalls
 			t = stack->pop();
 			// Do the same as above.
 			callStack.push(ip);
 			ip = functions[t] * 3;
 			break;
-		case 0x1f:			//return
+		case 0x22:			//tcall
+			// Proper tail calls!
+			ip = functions[arg] * 3;
+			break;
+		case 0x23:			//tcalls
+			t = stack->pop();
+			ip = functions[t] * 3;
+			break;
+		case 0x25:			//return
 			//Just go back!
 			ip = callStack.pop();
 			break;
