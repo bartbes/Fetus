@@ -40,8 +40,8 @@ local opcodeList = {
 	ctxtn = 0x1b,
 	fcall = 0x20,
 	fcalls = 0x21,
-	tcall = 0x21,
-	tcalls = 0x22,
+	tcall = 0x22,
+	tcalls = 0x23,
 	["return"] = 0x25,
 	jmp = 0x26,
 	jmps = 0x27,
@@ -142,12 +142,13 @@ function opcodes.get(output, var)
 	return output:write(string.char(opcodeList.get, oneToTwo(var)))
 end
 
-function opcodes.call(output, command)
+function opcodes.call(output, command, tail)
 	if environment[command] then
 		local var1, var2 = oneToTwo(environment[command])
+		local opcode = tail and opcodeList.tcalls or opcodeList.fcalls
 		return output:write(string.char(
 			opcodeList.get, var1, var2,
-			opcodeList.fcalls, 0x00, 0x00))
+			opcode, 0x00, 0x00))
 	elseif opcodes[command] then
 		return opcodes[command](output)
 	elseif commandList[command] then
@@ -264,6 +265,13 @@ function special.let(output, node)
 end
 
 function special.comment()
+end
+
+function special.tail(output, node)
+	for i = 3, #node do
+		compileNodeOrLiteral(output, node[i])
+	end
+	return opcodes.call(output, node[2], true)
 end
 
 function compileLiteral(output, literal)
