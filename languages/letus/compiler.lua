@@ -172,10 +172,9 @@ special["set!"] = function(output, node)
 	assert(not tonumber(varname), "Can't assign a value to a number")
 	assert(not varname:match("%b()"), "Can't assign a value to an S-expression")
 
-	local value
-	compileNodeOrLiteral(output, node[3])
 	local var = environment[varname] or addVariable()
 	environment[varname] = var
+	compileNodeOrLiteral(output, node[3])
 	set(output, var)
 end
 
