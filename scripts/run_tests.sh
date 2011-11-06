@@ -27,6 +27,9 @@ for file in $files; do
 		bf|b)
 			./brainfuck $file
 			;;
+		lts)
+			./letus $file
+			;;
 		*)
 			log "Don't recognize extension $extension"
 			;;
