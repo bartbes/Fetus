@@ -27,5 +27,5 @@ clean:
 
 %: src/vm.cpp %.ftsb
 	src/standalone $@.ftsb $@.cpp
-	$(CXX) -o $@ $@.cpp src/vm_core.cpp -Isrc
+	$(CXX) -o $@ $@.cpp src/vm.cpp -Isrc
 

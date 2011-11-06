@@ -8,9 +8,10 @@ text = [[
 #include <fstream>
 #include <sstream>
 #include <cstring>
-#include "vm_core.h"
+#include "vm.h"
 
 using namespace std;
+using namespace Fetus;
 
 char program[] = {
 %s
@@ -18,18 +19,12 @@ char program[] = {
 
 int main(int argc, const char **argv)
 {
-	contexts.insert(0, program);
-	unsigned int n;
-	for (int i = 1; i < argc; i++)
-	{
-		sscanf(argv[i], "%%u", &n);
-		stack.push(n);
-	}
-	parse();
-	for (int i = 1; i < contexts.length(); i++)
-	{
-		delete[] contexts.get(i);
-	}
+	VM vm;
+	Parser p(&vm);
+
+	p.parseBlob(program, sizeof(program)/sizeof(char));
+	
+	vm.run();
 	return 0;
 }
 ]]
