@@ -20,8 +20,8 @@ class Handle
 public:
 	bool open;
 
-	virtual size_t read(char *buffer, size_t len) = 0;
-	virtual void write(const char *buffer, size_t len) = 0;
+	virtual char read() = 0;
+	virtual void write(char ch) = 0;
 };
 
 class FileHandle : public Handle
@@ -29,30 +29,12 @@ class FileHandle : public Handle
 private:
 	FILE *file;
 public:
-	size_t read(char *buffer, size_t len);
-	void write(const char *buffer, size_t len);
+	char read();
+	void write(char ch);
 
 	FileHandle(const char *filename, const char *mode);
 	~FileHandle();
 };
-
-/*class TcpHandle : public Handle
-{
-private:
-	int sock;
-public:
-	void read(char *buffer, size_t len);
-	void write(char *buffer, size_t len);
-};
-
-class UdpHandle : public Handle
-{
-private:
-	int sock;
-public:
-	void read(char *buffer, size_t len);
-	void write(char *buffer, size_t len);
-};*/
 
 // Stack is a thing wrapper around std::stack.
 class Stack
@@ -85,13 +67,8 @@ class Context
 		unsigned int ip;
 		// The function table.
 		std::vector<unsigned int> functions;
-		// And a string table.
-		std::vector<std::string> strings;
 		// Handles.
 		std::vector<Handle*> handles;
-
-		// A current string.
-		std::string curstring;
 
 		// The raw bytecode and its length.
 		unsigned char *code;
@@ -102,10 +79,6 @@ class Context
 		Stack *stack;
 		// A call stack.
 		Stack callStack;
-
-		// A convenience function.
-		// Internal getString.
-		std::string &getString(unsigned int num);
 
 	protected:
 		// The functions.
@@ -128,9 +101,6 @@ class Context
 		// Constructor time!
 		Context(std::string &code, unsigned int *funcTable, bool owned = true);
 		Context(const unsigned char *code, size_t length, unsigned int *funcTable, bool owned = true);
-
-		// Set the strings.
-		void setStrings(std::vector<std::string> strings);
 
 		// And a nice destructor
 		~Context();

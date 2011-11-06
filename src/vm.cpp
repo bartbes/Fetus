@@ -55,16 +55,16 @@ FileHandle::~FileHandle()
 	open = false;
 }
 
-size_t FileHandle::read(char *buffer, size_t len)
+char FileHandle::read()
 {
-	len = fread(buffer, 1, len-1, file);
-	buffer[len] = 0;
-	return len;
+	char ch = 0;
+	fread(&ch, 1, 1, file);
+	return ch;
 }
 
-void FileHandle::write(const char *buffer, size_t len)
+void FileHandle::write(char ch)
 {
-	fwrite(buffer, 1, len, file);
+	fwrite(&ch, 1, 1, file);
 }
 
 // The context, copy the code over.
@@ -86,7 +86,6 @@ Context::Context(std::string &code, unsigned int *funcTable, bool owned)
 			functions.push_back(pointer);
 		}
 	}
-	curstring = "";
 }
 
 // C string version of the above.
@@ -107,19 +106,6 @@ Context::Context(const unsigned char *code, size_t length, unsigned int *funcTab
 			functions.push_back(pointer);
 		}
 	}
-	curstring = "";
-}
-
-void Context::setStrings(std::vector<std::string> strings)
-{
-	this->strings = strings;
-}
-
-std::string &Context::getString(unsigned int num)
-{
-	if (num == 0xffff)
-		return curstring;
-	return strings[num];
 }
 
 // The Fetus functions, in a nice big switch-case
@@ -128,22 +114,16 @@ void Context::runFunction(unsigned int function)
 	unsigned int t, point, size;
 	char *buffer;
 	const char *mode;
+	char ch;
 	Handle *handle;
 	std::string tempstr;
 	switch(function)
 	{
-		case 0x0001:			//puts
-			cout<<getString(stack->pop());
+		case 0x0001:			//putc
+			cout<<(char) stack->top();
 			break;
-		case 0x0002:		//input
-			t = stack->pop(); //size
-			buffer = new char[t];
-			memset(buffer, 0, t);
-			if (cin.good())
-				cin.read(buffer, t-1);
-			curstring = buffer;
-			stack->push(cin.gcount());
-			delete[] buffer;
+		case 0x0002:		//getc
+			stack->push(cin.get());
 			break;
 		case 0x0003:		//fileopen
 			t = stack->pop(); //mode
@@ -155,7 +135,11 @@ void Context::runFunction(unsigned int function)
 				mode = "a";
 			else
 				return;
-			handle = new FileHandle(curstring.c_str(), mode);
+			t = stack->pop(); //pointer
+			char ch;
+			for (unsigned int i = stack->pop(); ch = mem[i]; i++)
+				tempstr += ch;
+			handle = new FileHandle(tempstr.c_str(), mode);
 			handles.push_back(handle);
 			stack->push(handles.size());
 			break;
@@ -168,156 +152,20 @@ void Context::runFunction(unsigned int function)
 			handles[t] = 0;
 			break;
 		case 0x0005:		//read
-			size = stack->pop();
 			t = stack->pop(); //handle id
 			handle = handles[t];
 			if (!handle || !handle->open)
-				return;
-			buffer = new char[size];
-			memset(buffer, 0, size);
-			stack->push(handle->read(buffer, size));
-			curstring = buffer;
-			delete[] buffer;
+				stack->push(0);
+			else
+				stack->push(handle->read());
 			break;
 		case 0x0006:		//write
-			size = stack->pop();
-			tempstr = getString(stack->pop());
-			t = stack->pop(); //handle id
-			handle = handles[t];
-			if (!handle || !handle->open)
-				return;
-			handle->write(tempstr.c_str(), size);
-			break;
-		/*case 0x0007:		//tcp
-			ipbuffer = extractstack(0);
-			p = stack[strlen(ipbuffer)+1];
-			stack.clear();
-			s = socket(AF_INET, SOCK_STREAM, 0);
-			file.t = 1;
-			file.sock = s;
-			{
-				addrinfo hints, *servinfo;
-				memset(&hints, 0, sizeof(addrinfo));
-				hints.ai_family = AF_UNSPEC;
-				hints.ai_socktype = SOCK_STREAM;
-				char port[6];
-				sprintf(port, "%d", p);
-				if (getaddrinfo(ipbuffer, port, &hints, &servinfo) != 0)
-				{
-					delete[] ipbuffer;
-					id = handles.length();
-					file.open = false;
-					handles.insert(id, file);
-					stack.push(id);
-					return;
-				}
-				file.open = (file.sock != -1 && connect(file.sock, servinfo->ai_addr, servinfo->ai_addrlen) != -1);
-				freeaddrinfo(servinfo);
-			}
-			id = handles.length();
-			handles.insert(id, file);
-			stack.push(id);
-			delete[] ipbuffer;
-			break;
-		case 0x0008:		//udp
-			stack.clear();
-			s = socket(AF_INET6, SOCK_DGRAM, 0);
-			file.t = 2;
-			file.sock = s;
-			file.open = (s != -1);
-			a = 0;
-			if (file.open)
-				setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &a, sizeof(a));
-			p = handles.length();
-			handles.insert(p, file);
-			stack.push(p);
-			break;
-		case 0x0009:		//createip
-			p = stack[0];
-			a = stack[1];
-			b = stack[2];
-			c = stack[3];
-			d = stack[4];
-			strstream <<a <<"." <<b <<"." <<c <<"." <<d;
-			strbuffer = strstream.str();
-			insertmem(p, strbuffer.c_str());
-			stack.clear();
-			stack.push(strbuffer.length());
-			break;
-		case 0x000A:		//sendto
-			id = stack[0];
-			buffer = extractstack(1);
-			ipbuffer = extractstack(strlen(buffer)+2);
-			p = stack[strlen(buffer)+strlen(ipbuffer)+3];
-			stack.clear();
-			file = handles.get(id);
-			if (!file.open || file.t != 2)
-				return;
-			{
-				addrinfo hints, *servinfo;
-				memset(&hints, 0, sizeof(addrinfo));
-				hints.ai_family = AF_UNSPEC;
-				hints.ai_socktype = SOCK_STREAM;
-				char port[6];
-				sprintf(port, "%d", p);
-				if (getaddrinfo(ipbuffer, port, &hints, &servinfo) != 0)
-				{
-					delete[] ipbuffer;
-					id = handles.length();
-					file.open = false;
-					handles.insert(id, file);
-					stack.push(id);
-					return;
-				}
-				sendto(file.sock, buffer, strlen(buffer), 0, servinfo->ai_addr, servinfo->ai_addrlen);
-				freeaddrinfo(servinfo);
-			}
-			delete[] buffer;
-			delete[] ipbuffer;
-			break;
-		case 0x000B:		//storeaddress
-			if (storedip)
-				delete[] storedip;
-			storedip = extractstack();
-			storedport = stack[strlen(storedip)];
-			stack.clear();
-			break;
-		case 0x000C:		//getaddress
-			stack.clear();
-			insertstack(storedip);
-			stack.push(storedport);
-			break;
-		case 0x000D:		//createcontext
-			e = (stack.pop()+1)*3;
-			s = (stack.pop())*3;
-			stack.clear();
-			buffer = new char[e-s];
-			memcpy(buffer, contexts.get(0)+s, e-s);
-			p = contexts.length();
-			contexts.insert(p, buffer);
-			stack.push(p);
-			break;*/
-		case 0x0010:		//setcurstring
 			t = stack->pop();
-			while(!stack->empty())
-			{
-				curstring = ((char) stack->pop()) + curstring;
-			}
-			break;
-		case 0x0011:		//getcurstring
-			stack->clear();
-			for (int i = 0; i < curstring.length(); i++)
-			{
-				stack->push(curstring[i]);
-			}
-			break;
-		case 0x0012:
-			strings.push_back(curstring);
-			curstring = "";
-			stack->push(strings.size());
-			break;
-		case 0xfffe:			//putc
-			cout<<(char) stack->top();
+			handle = handles[t];
+			if (handle && handle->open)
+				handle->write(stack->pop());
+			else
+				stack->pop();
 			break;
 		case 0xffff:			//putn
 			cout<<stack->top() <<std::endl;
@@ -409,7 +257,7 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 		case 0x15:			//pos
 			stack->push(ip/3);
 			break;
-		case 0x16:			//ascii
+		/*case 0x16:			//ascii
 			buffer = new char[16];
 			sprintf(buffer, "%d", stack->top());
 			curstring = buffer;
@@ -419,7 +267,7 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 			sscanf(curstring.c_str(), "%d", &t);
 			stack->push(t);
 			delete[] buffer;
-			break;
+			break;*/
 		case 0x18:			//setp
 			t = stack->pop();
 			mem[stack->pop()] = t;
@@ -593,8 +441,6 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 	unsigned int counter;
 	size_t length;
 	Context *ctxt;
-	std::string str = "";
-	std::vector<std::string> strings;
 	// Parse the header.
 	for (unsigned int i = 3; contents[i] >= 0xf0 && i < len;)
 	{
@@ -619,8 +465,6 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 				length = (arg == 0) ? len-i-3 : arg-i-3;
 				ctxt = new Context(contents+i+3, length, funcTable, true);
 				delete[] funcTable; // Context makes a copy.
-				ctxt->setStrings(strings);
-				strings.clear();
 				vm->addContext(ctxt);
 				contexts++;
 
@@ -631,24 +475,6 @@ int Parser::parseBlob(const unsigned char *contents, size_t len)
 				else
 					i = arg;
 				continue;
-			case 0xf2:		//string
-				if (contents[i+1] == 0)
-				{
-					strings.push_back(str);
-					str = std::string("");
-				}
-				else if (contents[i+2] == 0)
-				{
-					str += contents[i+1];
-					strings.push_back(str);
-					str = std::string("");
-				}
-				else
-				{
-					str += contents[i+1];
-					str += contents[i+2];
-				}
-				break;
 		}
 		i += 3;
 	}
