@@ -455,6 +455,21 @@ unsigned int Context::parse(unsigned char opcode, unsigned int arg)
 			//Just go back!
 			ip = callStack.pop();
 			break;
+		case 0x26:			//jmp
+			ip = arg*3;
+			break;
+		case 0x27:			//jmps
+			ip = stack->pop()*3;
+			break;
+		case 0x28:			//jmpz
+			if (stack->pop() == 0)
+				ip = arg*3;
+			break;
+		case 0x29:			//jmpzs
+			t = stack->pop();
+			if (stack->pop() == 0)
+				ip = t*3;
+			break;
 		default:
 			fprintf(stderr, "Invalid opcode %02x\n", opcode);
 			return QUIT;

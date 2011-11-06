@@ -33,6 +33,10 @@ commandlist = {
 	[0x22] = "tcall",
 	[0x23] = "tcalls",
 	[0x25] = "return",
+	[0x26] = "jmp",
+	[0x27] = "jmps",
+	[0x28] = "jmpz",
+	[0x29] = "jmpzs",
 
 	[0xf0] = "function",
 	[0xf1] = "nextheader",

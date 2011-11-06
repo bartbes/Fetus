@@ -38,7 +38,13 @@ commandlist = {
 	ctxtn = 0x1b,
 	fcall = 0x20,
 	fcalls = 0x21,
+	tcall = 0x22,
+	tcalls = 0x23,
 	["return"] = 0x25,
+	jmp = 0x26,
+	jmps = 0x27,
+	jmpz = 0x28,
+	jmpzs = 0x29,
 }
 
 if not arg then

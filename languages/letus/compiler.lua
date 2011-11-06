@@ -43,6 +43,10 @@ local opcodeList = {
 	tcall = 0x21,
 	tcalls = 0x22,
 	["return"] = 0x25,
+	jmp = 0x26,
+	jmps = 0x27,
+	jmpz = 0x28,
+	jmpzs = 0x29,
 }
 
 local functionList = {
