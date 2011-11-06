@@ -209,11 +209,10 @@ function special.lambda(output, node)
 	--at the start, write a jump to the end
 	--so it doesn't get run on definition
 	output:writeAt(pos, string.char(
-		opcodeList.put, 0x00, 0x01,
-		opcodeList.goto, oneToTwo(output:getPos()+2)))
+		opcodeList.jmp, oneToTwo(output:getPos()+1)))
 
 	--register it in the header
-	local value = makeHeader("function", pos+2)
+	local value = makeHeader("function", pos+1)
 
 	--return the assigned id
 	opcodes.push(output, value)
@@ -226,20 +225,18 @@ special["if"] = function(output, node)
 	compileNode(output, node[2])
 	--prepare our jump
 	local pos = output:getPos()
-	output:write(string.char(opcodeList["not"], 0x00, 0x00))
 	--compile our true condition
 	compileNodeOrLiteral(output, node[3])
 	--and if we have one, our false condition
-	local falsecond = output:getPos()
+	local falsecond = output:getPos()+2
 	if #node == 4 then
-		output:write(string.char(opcodeList.put, 0x00, 0x01))
 		falsecond = output:getPos()+3
 		compileNodeOrLiteral(output, node[4])
 		--put a jump to the end after the true
-		output:writeAt(falsecond-3, string.char(opcodeList.goto, oneToTwo(output:getPos()+4)))
+		output:writeAt(falsecond-3, string.char(opcodeList.jmp, oneToTwo(output:getPos()+3)))
 	end
 	--rewrite the jump with the now-determined location
-	output:writeAt(pos+1, string.char(opcodeList.goto, oneToTwo(falsecond+1)))
+	output:writeAt(pos, string.char(opcodeList.jmpz, oneToTwo(falsecond)))
 end
 
 
