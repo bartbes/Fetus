@@ -95,16 +95,22 @@ local scripts = {
 	end,
 	["["] = function()
 		table.insert(posses, #bytecode/3)
-		return {}
+		return {
+			--enter/continue if non-zero
+			0x01, 0x00, 0x00, --get 0000
+			0x07, 0x00, 0x00, --getp 0000
+			0x28, 0x00, 0x00, --jmpz 0000, to be replaced
+		}
 	end,
 	["]"] = function()
 		local pos = table.remove(posses)
 		local pos_a, pos_b = math.floor(pos/256), pos%256
+		local mypos = #bytecode/3+1
+		bytecode[pos*3+8] = math.floor(mypos/256)
+		bytecode[pos*3+9] = mypos%256
 		return {
-			--loop if non-zero
-			0x01, 0x00, 0x00, --get 0000
-			0x07, 0x00, 0x00, --getp 0000
-			0x08, pos_a, pos_b, --goto (stored-pos)
+			--jump back to start
+			0x26, pos_a, pos_b, --jmp (stored-pos)
 		}
 	end,
 }
